@@ -1,69 +1,61 @@
-import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-7xl flex-col justify-center px-4 py-12 sm:px-6 lg:px-8">
+      <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12">
+        <section className="flex flex-col gap-6 lg:col-span-7">
+          <div className="inline-flex w-fit items-center gap-2 border border-border-bright bg-bg-surface px-3 py-1 shadow-sm">
+            <span className="h-2 w-2 bg-accent-warm animate-pulse" />
+            <span className="font-pixel text-[10px] text-text-accent">
+              PLACEHOLDER
+            </span>
+          </div>
+
+          {/* Heading */}
+          <div className="space-y-3">
+            <h1 className="font-pixel text-2xl leading-relaxed text-text-primary sm:text-3xl lg:text-4xl">
+              SOMETHING SOMETHING <br />
+              I'M <span className="text-accent-primary">AIMAN</span>.
+            </h1>
+            <p className="max-w-xl text-base leading-relaxed text-text-secondary sm:text-lg">
+              Im a bla bla bla
+            </p>
+          </div>
+
+          {/* Quest CTA Buttons */}
+          <div className="flex flex-wrap items-center gap-4 pt-2">
+            <Link
+              href="/projects"
+              className="border-2 border-accent-primary bg-accent-primary px-5 py-3 font-pixel text-xs text-bg-deep shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] transition-all hover:bg-accent-primary/90 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              ▶ EXPLORE QUESTS
+            </Link>
+
+            <Link
+              href="/about"
+              className="border-2 border-border-bright bg-bg-surface px-5 py-3 font-pixel text-xs text-text-primary shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] transition-all hover:border-accent-primary hover:text-accent-primary active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+              CHARACTER STATS
+            </Link>
+          </div>
+        </section>
+
+        {/* Right Column: Game Scene Viewport Frame (5 cols) */}
+        <section className="flex justify-center lg:col-span-5">
+          <div className="relative aspect-square w-full max-w-[420px] border-4 border-border-bright bg-bg-surface/50 p-3 shadow-[6px_6px_0px_0px_rgba(0,0,0,0.6)]">
+            {/* Inner CRT/Canvas Frame */}
+            <div className="flex h-full w-full flex-col items-center justify-center border-2 border-dashed border-border-bright/60 bg-bg-deep/80 p-6 text-center">
+              <span className="font-pixel text-xs text-text-accent animate-pulse">
+                [ PIXEL SCENE CANVAS ]
+              </span>
+              <p className="mt-2 text-xs text-text-secondary">
+                Parallax mountain & particle engine will mount here
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

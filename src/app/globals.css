@@ -6,6 +6,27 @@
   image-rendering: crisp-edges;
 }
 
+@keyframes cloud-drift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-cloud-slow {
+  animation: cloud-drift 140s linear infinite;
+}
+
+.animate-cloud-mid {
+  animation: cloud-drift 80s linear infinite;
+}
+
+.animate-cloud-fast {
+  animation: cloud-drift 45s linear infinite;
+}
+
 @theme {
   /*sunset into night palette*/
   --color-bg-deep: hsl(260 40% 10%); /* Deep twilight purple/black */
