@@ -17,14 +17,138 @@
 
 .animate-cloud-slow {
   animation: cloud-drift 140s linear infinite;
+  will-change: transform;
 }
 
 .animate-cloud-mid {
   animation: cloud-drift 80s linear infinite;
+  will-change: transform;
 }
 
 .animate-cloud-fast {
   animation: cloud-drift 45s linear infinite;
+  will-change: transform;
+}
+
+/* ==========================================================================
+   Anime Speed Streaks & Parallax Velocity Cross-Dissolve Keyframes
+   ========================================================================== */
+
+/* Streaks rushing left (camera panning right) */
+@keyframes streak-rush-left {
+  0% {
+    transform: translate3d(100vw, 0, 0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  85% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(-100vw, 0, 0);
+    opacity: 0;
+  }
+}
+
+/* Streaks rushing right (camera panning left) */
+@keyframes streak-rush-right {
+  0% {
+    transform: translate3d(-100vw, 0, 0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  85% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(100vw, 0, 0);
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   Parallax Velocity Cross-Dissolve:
+   Both scenes cover full viewport with lateral momentum while cross-fading.
+   Zero vertical line cuts or seams.
+   ========================================================================== */
+
+/* Outgoing scene drifting left while fading out (camera moving right) */
+@keyframes dissolve-out-left {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(-15vw, 0, 0);
+    opacity: 0;
+  }
+}
+
+/* Outgoing scene drifting right while fading out (camera moving left) */
+@keyframes dissolve-out-right {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(15vw, 0, 0);
+    opacity: 0;
+  }
+}
+
+/* Incoming scene drifting in from right while fading in (camera moving right) */
+@keyframes dissolve-in-from-right {
+  0% {
+    transform: translate3d(15vw, 0, 0);
+    opacity: 0;
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+/* Incoming scene drifting in from left while fading in (camera moving left) */
+@keyframes dissolve-in-from-left {
+  0% {
+    transform: translate3d(-15vw, 0, 0);
+    opacity: 0;
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+.animate-dissolve-out-left {
+  animation: dissolve-out-left 0.55s cubic-bezier(0.35, 0, 0.25, 1) forwards;
+}
+
+.animate-dissolve-out-right {
+  animation: dissolve-out-right 0.55s cubic-bezier(0.35, 0, 0.25, 1) forwards;
+}
+
+.animate-dissolve-in-from-right {
+  animation: dissolve-in-from-right 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-dissolve-in-from-left {
+  animation: dissolve-in-from-left 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-dissolve-out-left,
+  .animate-dissolve-out-right,
+  .animate-dissolve-in-from-right,
+  .animate-dissolve-in-from-left {
+    animation: none !important;
+    transform: none !important;
+    transition: opacity 0.25s ease-in-out !important;
+  }
 }
 
 @theme {

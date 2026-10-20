@@ -1,3 +1,8 @@
+interface CloudBackgroundProps {
+  className?: string;
+  style?: React.CSSProperties;
+}
+
 const CLOUD_LAYERS = [
   {
     id: "sky-base",
@@ -25,13 +30,16 @@ const CLOUD_LAYERS = [
   },
 ] as const;
 
-export default function CloudBackground() {
+export default function CloudBackground({
+  className = "fixed inset-0",
+  style,
+}: CloudBackgroundProps = {}) {
   return (
     <div
       aria-hidden="true"
-      className="fixed inset-0 -z-10 overflow-hidden pointer-events-none select-none bg-bg-deep"
+      style={style}
+      className={`overflow-hidden pointer-events-none select-none bg-bg-deep ${className}`}
     >
-      {/* maybe remove pixelated? */}
       <div
         className="absolute inset-0 bg-cover bg-bottom bg-no-repeat pixelated"
         style={{ backgroundImage: `url(${CLOUD_LAYERS[0].src})` }}
@@ -41,7 +49,7 @@ export default function CloudBackground() {
             key={layer.id}
             className={`absolute inset-0 w-[200%] h-full flex ${layer.speedClass} ${layer.opacity}`}
           >
-            {/* looping */}
+            {/* Seamless looping cloud strip */}
             <div
               className="w-1/2 h-full bg-cover bg-bottom bg-repeat-x pixelated"
               style={{ backgroundImage: `url(${layer.src})` }}
@@ -52,7 +60,7 @@ export default function CloudBackground() {
             />
           </div>
         ))}
-        {/* overlay */}
+        {/* Sunset overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-bg-deep/20 to-bg-deep/60" />
       </div>
     </div>

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Press_Start_2P, Outfit } from "next/font/google";
 import "./globals.css";
 import Navbar from "./components/layout/Navbar";
-import CloudBackground from "./components/pixel/CloudBackground";
+import SceneTransitionManager from "./components/pixel/SceneTransitionManager";
 
 const pressStart2p = Press_Start_2P({
   weight: "400",
@@ -27,7 +27,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${pressStart2p.variable} ${outfit.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col selection:bg-accent-primary selection:text-white">
-        <CloudBackground />
+        <SceneTransitionManager />
         <Navbar />
         <main className="flex-1">{children}</main>
       </body>
