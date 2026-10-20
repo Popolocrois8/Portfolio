@@ -15,6 +15,11 @@
   }
 }
 
+.animate-cloud-crawl {
+  animation: cloud-drift 220s linear infinite;
+  will-change: transform;
+}
+
 .animate-cloud-slow {
   animation: cloud-drift 140s linear infinite;
   will-change: transform;
@@ -30,8 +35,14 @@
   will-change: transform;
 }
 
+.animate-cloud-vfast {
+  animation: cloud-drift 28s linear infinite;
+  will-change: transform;
+}
+
 /* ==========================================================================
    Anime Speed Streaks & Parallax Velocity Cross-Dissolve Keyframes
+   (Option 1: Exact original settings from commit 3c636c4)
    ========================================================================== */
 
 /* Streaks rushing left (camera panning right) */
@@ -71,7 +82,7 @@
 }
 
 /* ==========================================================================
-   Parallax Velocity Cross-Dissolve:
+   Parallax Velocity Cross-Dissolve (Option 1):
    Both scenes cover full viewport with lateral momentum while cross-fading.
    Zero vertical line cuts or seams.
    ========================================================================== */

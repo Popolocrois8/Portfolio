@@ -27,9 +27,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${pressStart2p.variable} ${outfit.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col selection:bg-accent-primary selection:text-white">
-        <SceneTransitionManager />
-        <Navbar />
-        <main className="flex-1">{children}</main>
+        <SceneTransitionManager>
+          <Navbar />
+          <main className="flex-1">{children}</main>
+        </SceneTransitionManager>
       </body>
     </html>
   );

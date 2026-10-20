@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SkySelectorHUD from "../components/pixel/SkySelectorHUD";
 
 interface Quest {
   id: string;
@@ -77,6 +78,11 @@ export default function ProjectsPage() {
             midnight canopy.
           </p>
         </div>
+      </div>
+
+      {/* Interactive Atmosphere Selector */}
+      <div className="mt-8">
+        <SkySelectorHUD />
       </div>
 
       {/* Quest Grid */}

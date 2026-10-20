@@ -1,34 +1,74 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  ReactNode,
+} from "react";
 import { usePathname } from "next/navigation";
-import CloudBackground from "./CloudBackground";
-import NightCloudBackground from "./NightCloudBackground";
+import ParallaxSky from "./ParallaxSky";
 import SpeedStreaks, { PanDirection } from "./SpeedStreaks";
-
-type SceneTheme = "sunset" | "night";
+import {
+  SkyThemeKey,
+  SKY_THEMES,
+  SkyThemeConfig,
+  resolveSkyTheme,
+} from "./skyThemes";
 
 interface ActiveTransition {
-  from: SceneTheme;
-  to: SceneTheme;
+  from: SkyThemeKey;
+  to: SkyThemeKey;
   direction: PanDirection;
 }
 
-const ROUTE_SCENE_MAP: Record<string, SceneTheme> = {
-  "/": "sunset",
-  "/about": "sunset",
-  "/projects": "night",
-  "/skills": "night",
-  "/contact": "sunset",
+interface SkyContextValue {
+  activeTheme: SkyThemeKey;
+  setTheme: (theme: SkyThemeKey, direction?: PanDirection) => void;
+  availableThemes: SkyThemeConfig[];
+  isTransitioning: boolean;
+}
+
+const SkyContext = createContext<SkyContextValue | null>(null);
+
+export function useSkyTheme(): SkyContextValue {
+  const context = useContext(SkyContext);
+  if (!context) {
+    throw new Error("useSkyTheme must be used within a SceneTransitionManager");
+  }
+  return context;
+}
+
+// Route to sky theme mapping for all pages
+export const DEFAULT_ROUTE_SCENE_MAP: Record<string, SkyThemeKey> = {
+  "/": "sunset-pink",            // Home: Clouds 4 (Afternoon Pink / Sunset)
+  "/about": "day-blue",          // About: Clouds 1 (Day Blue)
+  "/projects": "night-blue",     // Projects: Clouds 3 (Night Dark Blue)
+  "/skills": "afternoon-orange", // Skills: Clouds 6 (Afternoon Orange)
+  "/contact": "night-purple",    // Contact: Clouds 8 (Night Purple)
 };
 
 const ROUTE_ORDER = ["/", "/about", "/projects", "/skills", "/contact"];
 
-function getSceneForPath(path: string): SceneTheme {
-  if (path in ROUTE_SCENE_MAP) {
-    return ROUTE_SCENE_MAP[path];
+const ALL_THEME_KEYS: SkyThemeKey[] = [
+  "day-blue",
+  "afternoon",
+  "night-blue",
+  "sunset-pink",
+  "day-grey",
+  "afternoon-orange",
+  "afternoon-warm",
+  "night-purple",
+];
+
+function getThemeForPath(path: string): SkyThemeKey {
+  if (path in DEFAULT_ROUTE_SCENE_MAP) {
+    return DEFAULT_ROUTE_SCENE_MAP[path];
   }
-  return path.startsWith("/projects") ? "night" : "sunset";
+  return path.startsWith("/projects") ? "night-blue" : "sunset-pink";
 }
 
 function getPanDirection(fromPath: string, toPath: string): PanDirection {
@@ -41,25 +81,65 @@ function getPanDirection(fromPath: string, toPath: string): PanDirection {
   return "right";
 }
 
-export default function SceneTransitionManager() {
+export default function SceneTransitionManager({
+  children,
+}: {
+  children?: ReactNode;
+}) {
   const pathname = usePathname();
-  const initialScene = getSceneForPath(pathname);
+  const initialTheme = getThemeForPath(pathname);
 
-  const [activeScene, setActiveScene] = useState<SceneTheme>(initialScene);
+  const [activeTheme, setActiveTheme] = useState<SkyThemeKey>(initialTheme);
   const [transition, setTransition] = useState<ActiveTransition | null>(null);
 
   const prevPathRef = useRef(pathname);
-  const currentSceneRef = useRef(initialScene);
+  const currentThemeRef = useRef(initialTheme);
   const isInitialMount = useRef(true);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Trigger transition between any two themes using Option 1 (Parallax Velocity Cross-Dissolve)
+  const triggerTransition = useCallback(
+    (targetTheme: SkyThemeKey, direction: PanDirection = "right") => {
+      const fromTheme = currentThemeRef.current;
+      if (fromTheme === targetTheme) return;
+
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+
+      currentThemeRef.current = targetTheme;
+      setActiveTheme(targetTheme);
+      setTransition({
+        from: fromTheme,
+        to: targetTheme,
+        direction,
+      });
+
+      // 550ms Option 1 transition window
+      timerRef.current = setTimeout(() => {
+        setTransition(null);
+        timerRef.current = null;
+      }, 550);
+    },
+    []
+  );
+
+  // Manual setTheme API for buttons, selectors, or page triggers
+  const setTheme = useCallback(
+    (theme: SkyThemeKey, direction: PanDirection = "right") => {
+      const resolved = resolveSkyTheme(theme);
+      triggerTransition(resolved, direction);
+    },
+    [triggerTransition]
+  );
+
+  // Route-based transition coordinator across all pages
   useEffect(() => {
-    // Skip animation on initial page load
     if (isInitialMount.current) {
       isInitialMount.current = false;
       prevPathRef.current = pathname;
-      currentSceneRef.current = initialScene;
-      setActiveScene(initialScene);
+      currentThemeRef.current = initialTheme;
+      setActiveTheme(initialTheme);
       return;
     }
 
@@ -67,62 +147,36 @@ export default function SceneTransitionManager() {
     if (previousPath === pathname) return;
     prevPathRef.current = pathname;
 
-    const prevScene = currentSceneRef.current;
-    const targetScene = getSceneForPath(pathname);
-
-    // If both routes use the same background theme, no transition needed
-    if (prevScene === targetScene) {
-      return;
-    }
-
+    const targetTheme = getThemeForPath(pathname);
     const direction = getPanDirection(previousPath, pathname);
 
-    // Clear any active timer from rapid clicks
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-    }
-
-    // Trigger transition across persistent layers
-    currentSceneRef.current = targetScene;
-    setActiveScene(targetScene);
-    setTransition({
-      from: prevScene,
-      to: targetScene,
-      direction,
-    });
-
-    // After animation finishes (550ms), return to idle resting state
-    timerRef.current = setTimeout(() => {
-      setTransition(null);
-      timerRef.current = null;
-    }, 550);
+    triggerTransition(targetTheme, direction);
 
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
     };
-  }, [pathname]);
+  }, [pathname, initialTheme, triggerTransition]);
 
-  // Determine the animation or resting state for each persistent layer
-  const getLayerClass = (scene: SceneTheme): string => {
+  // CSS class assignment for each persistent layer
+  const getLayerClass = (themeKey: SkyThemeKey): string => {
     if (!transition) {
-      // Idle state: active scene is visible, other scenes are hidden
-      return scene === activeScene
+      // Idle state
+      return themeKey === activeTheme
         ? "opacity-100 z-0"
         : "opacity-0 -z-10 pointer-events-none";
     }
 
-    // During active transition:
-    if (scene === transition.from) {
-      // Outgoing layer: drifts and fades out smoothly without resetting its clouds
+    // Outgoing layer: drifts 15vw and fades out smoothly without resetting clouds
+    if (themeKey === transition.from) {
       return transition.direction === "right"
         ? "animate-dissolve-out-left z-0"
         : "animate-dissolve-out-right z-0";
     }
 
-    if (scene === transition.to) {
-      // Incoming layer: drifts in and fades in smoothly
+    // Incoming layer: drifts in 15vw and fades in smoothly
+    if (themeKey === transition.to) {
       return transition.direction === "right"
         ? "animate-dissolve-in-from-right z-10"
         : "animate-dissolve-in-from-left z-10";
@@ -131,31 +185,36 @@ export default function SceneTransitionManager() {
     return "opacity-0 -z-10 pointer-events-none";
   };
 
+  const contextValue: SkyContextValue = {
+    activeTheme,
+    setTheme,
+    availableThemes: Object.values(SKY_THEMES),
+    isTransitioning: Boolean(transition),
+  };
+
   return (
-    <div
-      aria-hidden="true"
-      className="fixed inset-0 -z-10 pointer-events-none select-none overflow-hidden"
-    >
-      {/* Sunset Sky Layer (Permanently mounted: cloud drift animation never resets) */}
+    <SkyContext.Provider value={contextValue}>
       <div
-        className={`fixed inset-y-0 -left-[15vw] -right-[15vw] ${getLayerClass(
-          "sunset"
-        )}`}
+        aria-hidden="true"
+        className="fixed inset-0 -z-10 pointer-events-none select-none overflow-hidden"
       >
-        <CloudBackground className="absolute inset-0" />
+        {/* All Sky Layers Persistently Mounted (Option 1: 15vw bleed, continuous cloud drift) */}
+        {ALL_THEME_KEYS.map((themeKey) => (
+          <div
+            key={themeKey}
+            className={`fixed inset-y-0 -left-[15vw] -right-[15vw] ${getLayerClass(
+              themeKey
+            )}`}
+          >
+            <ParallaxSky theme={themeKey} className="absolute inset-0" />
+          </div>
+        ))}
+
+        {/* Anime Speed Streaks: rendered inside background system */}
+        {transition && <SpeedStreaks direction={transition.direction} />}
       </div>
 
-      {/* Night Sky Layer (Permanently mounted: cloud drift animation never resets) */}
-      <div
-        className={`fixed inset-y-0 -left-[15vw] -right-[15vw] ${getLayerClass(
-          "night"
-        )}`}
-      >
-        <NightCloudBackground className="absolute inset-0" />
-      </div>
-
-      {/* Anime Speed Streaks: only rendered during active transition */}
-      {transition && <SpeedStreaks direction={transition.direction} />}
-    </div>
+      {children}
+    </SkyContext.Provider>
   );
 }
