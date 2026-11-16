@@ -77,16 +77,19 @@ export default function WelcomeCard() {
             </div>
           </div>
 
-          {/* Action CTAs — clean text links anchored to bottom-left */}
-          <div className="flex flex-col items-start gap-2 pt-1">
+          {/* Action CTAs — clean inline text links anchored to bottom-left */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[var(--bento-border-soft)]/60 pt-3.5">
             <a
               href="/resume.pdf"
               target="_blank"
               rel="noopener noreferrer"
-              className="group/resume inline-flex cursor-pointer items-center gap-2 text-xs sm:text-sm font-semibold text-[var(--bento-accent)] transition-opacity duration-200 hover:opacity-80 active:scale-95"
+              className="group/resume inline-flex cursor-pointer items-center gap-1.5 text-xs sm:text-sm font-medium text-[var(--bento-text)] transition-colors duration-200 hover:text-[var(--bento-accent)] active:scale-95"
             >
+              <span className="underline decoration-2 decoration-transparent underline-offset-4 transition-colors duration-200 group-hover/resume:decoration-[var(--bento-accent)]">
+                View Resume
+              </span>
               <svg
-                className="h-3.5 w-3.5 shrink-0"
+                className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-hover/resume:translate-x-0.5 group-hover/resume:-translate-y-0.5"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -95,24 +98,31 @@ export default function WelcomeCard() {
                 strokeLinejoin="round"
                 aria-hidden="true"
               >
-                <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
-                <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-                <path d="M10 9H8" />
-                <path d="M16 13H8" />
-                <path d="M16 17H8" />
+                <path d="M7 17 17 7" />
+                <path d="M7 7h10v10" />
               </svg>
-              <span className="group-hover/resume:underline underline-offset-4">
-                Here&apos;s my resume if ur interested :)
-              </span>
             </a>
+
+            <span
+              aria-hidden="true"
+              className="hidden sm:inline text-xs text-[var(--bento-text-muted)]/50 select-none"
+            >
+              ·
+            </span>
 
             <button
               type="button"
               onClick={() => triggerPixelTransition("/about")}
-              className="group/about inline-flex cursor-pointer items-center gap-2 text-xs sm:text-sm font-medium text-[var(--bento-text)] transition-colors duration-200 hover:text-[var(--bento-accent)] active:scale-95"
+              className="group/about inline-flex cursor-pointer items-center gap-1.5 text-xs sm:text-sm font-medium text-[var(--bento-text)] transition-colors duration-200 hover:text-[var(--bento-accent)] active:scale-95"
             >
-              <span className="group-hover/about:underline underline-offset-4">
-                wanna know more about little old me ? (⸝⸝- ̫ -⸝⸝)
+              <span className="underline decoration-2 decoration-transparent underline-offset-4 transition-colors duration-200 group-hover/about:decoration-[var(--bento-accent)]">
+                Wanna know more about little old me?
+              </span>
+              <span
+                aria-hidden="true"
+                className="inline-block max-w-0 overflow-hidden whitespace-nowrap text-[var(--bento-accent)] opacity-0 transition-all duration-300 ease-out group-hover/about:max-w-[96px] group-hover/about:opacity-100"
+              >
+                (⸝⸝- ̫ -⸝⸝)
               </span>
               <svg
                 className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-hover/about:translate-x-1"
