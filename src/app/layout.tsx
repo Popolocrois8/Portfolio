@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Press_Start_2P, Outfit } from "next/font/google";
 import "./globals.css";
-import Navbar from "./components/layout/Navbar";
 import SceneTransitionManager from "./components/pixel/SceneTransitionManager";
 
 const pressStart2p = Press_Start_2P({
@@ -16,11 +15,16 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Aiman // Portfolio",
-  description: "Aiman's Portfolio",
+  title: "Aiman // Creative Technologist, Videographer & Visual Artist",
+  description:
+    "Portfolio of Aiman — Creative Technologist, Videographer, and Visual Artist crafting high-craft digital, cinematic, and analog experiences.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html
       lang="en"
@@ -28,7 +32,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col selection:bg-accent-primary selection:text-white">
         <SceneTransitionManager>
-          <Navbar />
           <main className="flex-1">{children}</main>
         </SceneTransitionManager>
       </body>

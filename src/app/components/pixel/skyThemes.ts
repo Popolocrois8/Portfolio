@@ -11,6 +11,113 @@ export type SkyThemeKey =
 // Aliases for backwards compatibility with earlier names
 export type SkyThemeAlias = "sunset" | "night";
 
+export type CardBorderMode = "soft" | "crisp";
+
+export interface BentoPalette {
+  primary: string;
+  secondary: string;
+  surface: string;
+  softBorder: string;
+  crispBorder: string;
+  text: string;
+  textMuted: string;
+  accent: string;
+  accentText: string;
+  accentSoft: string;
+  pillBg: string;
+  pillText: string;
+  shadowColor: string;
+  pageText: string;
+  pageTextMuted: string;
+}
+
+const DAY_BLUE_PALETTE: BentoPalette = {
+  primary: "#DCEEFF",
+  secondary: "#F4F9FF",
+  surface: "#FFFFFF",
+  softBorder: "#A6CEFA",
+  crispBorder: "#0F2942",
+  text: "#0F2942",
+  textMuted: "#466685",
+  accent: "#2563EB",
+  accentText: "#FFFFFF",
+  accentSoft: "#DBEAFE",
+  pillBg: "#EBF4FF",
+  pillText: "#1E40AF",
+  shadowColor: "rgba(30, 64, 175, 0.14)",
+  pageText: "#0F2942",
+  pageTextMuted: "#1E3A5F",
+};
+
+const AFTERNOON_ORANGE_PALETTE: BentoPalette = {
+  primary: "#FFE7D1",
+  secondary: "#FFF6EC",
+  surface: "#FFFDF9",
+  softBorder: "#F7BE91",
+  crispBorder: "#3B2012",
+  text: "#3B2012",
+  textMuted: "#7A533E",
+  accent: "#B45309",
+  accentText: "#FFFFFF",
+  accentSoft: "#FFE3C2",
+  pillBg: "#FFF1E3",
+  pillText: "#9A3412",
+  shadowColor: "rgba(180, 83, 9, 0.14)",
+  pageText: "#FFF7ED",
+  pageTextMuted: "#FED7AA",
+};
+
+const SUNSET_PINK_PALETTE: BentoPalette = {
+  primary: "#FADCE8",
+  secondary: "#FFF2F7",
+  surface: "#FFFFFF",
+  softBorder: "#F2B1CC",
+  crispBorder: "#2E162B",
+  text: "#2E162B",
+  textMuted: "#6E4768",
+  accent: "#DB2777",
+  accentText: "#FFFFFF",
+  accentSoft: "#FCE7F3",
+  pillBg: "#FDF2F8",
+  pillText: "#9D174D",
+  shadowColor: "rgba(157, 23, 77, 0.14)",
+  pageText: "#FDF2F8",
+  pageTextMuted: "#FBCFE8",
+};
+
+const NIGHT_BLUE_PALETTE: BentoPalette = {
+  primary: "#E3E1FC",
+  secondary: "#F4F3FF",
+  surface: "#FFFFFF",
+  softBorder: "#BEB9F0",
+  crispBorder: "#181A38",
+  text: "#181A38",
+  textMuted: "#4E527D",
+  accent: "#5B4CE6",
+  accentText: "#FFFFFF",
+  accentSoft: "#E8E6FF",
+  pillBg: "#EEF2FF",
+  pillText: "#3730A3",
+  shadowColor: "rgba(49, 46, 129, 0.18)",
+  pageText: "#EEF2FF",
+  pageTextMuted: "#C7D2FE",
+};
+
+export const BENTO_PALETTES: Record<SkyThemeKey, BentoPalette> = {
+  "day-blue": DAY_BLUE_PALETTE,
+  "day-grey": DAY_BLUE_PALETTE,
+  "afternoon-orange": AFTERNOON_ORANGE_PALETTE,
+  "afternoon-warm": AFTERNOON_ORANGE_PALETTE,
+  "sunset-pink": SUNSET_PINK_PALETTE,
+  "afternoon": SUNSET_PINK_PALETTE,
+  "night-blue": NIGHT_BLUE_PALETTE,
+  "night-purple": NIGHT_BLUE_PALETTE,
+};
+
+export function getBentoPalette(theme: SkyThemeKey): BentoPalette {
+  return BENTO_PALETTES[theme] ?? SUNSET_PINK_PALETTE;
+}
+
 export interface SkyLayerConfig {
   id: string;
   src: string;

@@ -10,6 +10,7 @@
   0% {
     transform: translate3d(0, 0, 0);
   }
+
   100% {
     transform: translate3d(-50%, 0, 0);
   }
@@ -40,95 +41,93 @@
   will-change: transform;
 }
 
-/* ==========================================================================
-   Anime Speed Streaks & Parallax Velocity Cross-Dissolve Keyframes
-   (Option 1: Exact original settings from commit 3c636c4)
-   ========================================================================== */
 
-/* Streaks rushing left (camera panning right) */
 @keyframes streak-rush-left {
   0% {
     transform: translate3d(100vw, 0, 0);
     opacity: 0;
   }
+
   15% {
     opacity: 0.9;
   }
+
   85% {
     opacity: 0.9;
   }
+
   100% {
     transform: translate3d(-100vw, 0, 0);
     opacity: 0;
   }
 }
 
-/* Streaks rushing right (camera panning left) */
+
 @keyframes streak-rush-right {
   0% {
     transform: translate3d(-100vw, 0, 0);
     opacity: 0;
   }
+
   15% {
     opacity: 0.9;
   }
+
   85% {
     opacity: 0.9;
   }
+
   100% {
     transform: translate3d(100vw, 0, 0);
     opacity: 0;
   }
 }
 
-/* ==========================================================================
-   Parallax Velocity Cross-Dissolve (Option 1):
-   Both scenes cover full viewport with lateral momentum while cross-fading.
-   Zero vertical line cuts or seams.
-   ========================================================================== */
-
-/* Outgoing scene drifting left while fading out (camera moving right) */
 @keyframes dissolve-out-left {
   0% {
     transform: translate3d(0, 0, 0);
     opacity: 1;
   }
+
   100% {
     transform: translate3d(-15vw, 0, 0);
     opacity: 0;
   }
 }
 
-/* Outgoing scene drifting right while fading out (camera moving left) */
+
 @keyframes dissolve-out-right {
   0% {
     transform: translate3d(0, 0, 0);
     opacity: 1;
   }
+
   100% {
     transform: translate3d(15vw, 0, 0);
     opacity: 0;
   }
 }
 
-/* Incoming scene drifting in from right while fading in (camera moving right) */
+
 @keyframes dissolve-in-from-right {
   0% {
     transform: translate3d(15vw, 0, 0);
     opacity: 0;
   }
+
   100% {
     transform: translate3d(0, 0, 0);
     opacity: 1;
   }
 }
 
-/* Incoming scene drifting in from left while fading in (camera moving left) */
+
 @keyframes dissolve-in-from-left {
   0% {
     transform: translate3d(-15vw, 0, 0);
     opacity: 0;
   }
+
   100% {
     transform: translate3d(0, 0, 0);
     opacity: 1;
@@ -152,6 +151,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .animate-dissolve-out-left,
   .animate-dissolve-out-right,
   .animate-dissolve-in-from-right,
@@ -162,14 +162,12 @@
   }
 }
 
-/* ==========================================================================
-   10-Column Staggered Rectangle Curtain (Flowy Ease-In-Out Page Transition)
-   ========================================================================== */
 
 @keyframes rect-curtain-drop-in {
   0% {
     transform: translate3d(0, -104%, 0);
   }
+
   100% {
     transform: translate3d(0, 0%, 0);
   }
@@ -179,6 +177,7 @@
   0% {
     transform: translate3d(0, 104%, 0);
   }
+
   100% {
     transform: translate3d(0, 0%, 0);
   }
@@ -188,6 +187,7 @@
   0% {
     transform: translate3d(0, 0%, 0);
   }
+
   100% {
     transform: translate3d(0, -104%, 0);
   }
@@ -197,6 +197,7 @@
   0% {
     transform: translate3d(0, 0%, 0);
   }
+
   100% {
     transform: translate3d(0, 104%, 0);
   }
@@ -230,6 +231,7 @@
   0% {
     opacity: 0;
   }
+
   100% {
     opacity: 1;
   }
@@ -239,6 +241,7 @@
   0% {
     opacity: 1;
   }
+
   100% {
     opacity: 0;
   }
@@ -252,19 +255,130 @@
   animation: curtain-fade-out 180ms ease-in-out both;
 }
 
+/* ==========================================================================
+   Codrops-style Directional Pixel Wave & Parallax Page Motion
+   ========================================================================== */
+
+@keyframes pixel-cell-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pixel-cell-out {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+
+.animate-pixel-cell-in {
+  animation: pixel-cell-in 190ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.animate-pixel-cell-out {
+  animation: pixel-cell-out 190ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes page-glide-out-up {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, -64px, 0);
+    opacity: 0.35;
+  }
+}
+
+@keyframes page-glide-in-up {
+  0% {
+    transform: translate3d(0, 64px, 0);
+    opacity: 0.35;
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes page-glide-out-down {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 64px, 0);
+    opacity: 0.35;
+  }
+}
+
+@keyframes page-glide-in-down {
+  0% {
+    transform: translate3d(0, -64px, 0);
+    opacity: 0.35;
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+.animate-page-out-up {
+  animation-name: page-glide-out-up;
+  animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+  animation-fill-mode: both;
+}
+
+.animate-page-in-up {
+  animation-name: page-glide-in-up;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-fill-mode: both;
+}
+
+.animate-page-out-down {
+  animation-name: page-glide-out-down;
+  animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+  animation-fill-mode: both;
+}
+
+.animate-page-in-down {
+  animation-name: page-glide-in-down;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-fill-mode: both;
+}
+
 @theme {
   /*sunset into night palette*/
-  --color-bg-deep: hsl(260 40% 10%); /* Deep twilight purple/black */
-  --color-bg-surface: hsl(260 30% 15%); /* Night sky panel bg */
-  --color-bg-elevated: hsl(260 25% 20%); /* Hover & card states */
+  --color-bg-deep: hsl(260 40% 10%);
+  /* Deep twilight purple/black */
+  --color-bg-surface: hsl(260 30% 15%);
+  /* Night sky panel bg */
+  --color-bg-elevated: hsl(260 25% 20%);
+  /* Hover & card states */
 
-  --color-text-primary: hsl(330 20% 95%); /* Soft warm white */
-  --color-text-secondary: hsl(330 15% 70%); /* Muted pinkish gray */
-  --color-text-accent: hsl(330 80% 65%); /* Bright sunset pink */
+  --color-text-primary: hsl(330 20% 95%);
+  /* Soft warm white */
+  --color-text-secondary: hsl(330 15% 70%);
+  /* Muted pinkish gray */
+  --color-text-accent: hsl(330 80% 65%);
+  /* Bright sunset pink */
 
-  --color-accent-primary: hsl(340 85% 60%); /* Neon sunset pink */
-  --color-accent-cool: hsl(280 60% 50%); /* Twilight violet */
-  --color-accent-warm: hsl(15 90% 60%); /* Golden sunset orange */
+  --color-accent-primary: hsl(340 85% 60%);
+  /* Neon sunset pink */
+  --color-accent-cool: hsl(280 60% 50%);
+  /* Twilight violet */
+  --color-accent-warm: hsl(15 90% 60%);
+  /* Golden sunset orange */
 
   --color-border: hsl(225 20% 20%);
   --color-border-bright: hsl(225 20% 30%);
@@ -277,7 +391,7 @@
 }
 
 :root {
-  /* Default pastel bento tokens (sunset-pink fallback) */
+
   --bento-bg-primary: #FADCE8;
   --bento-bg-secondary: #FFF2F7;
   --bento-surface: #FFFFFF;

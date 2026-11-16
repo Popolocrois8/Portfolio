@@ -1,61 +1,152 @@
-import Link from "next/link";
+"use client";
+
+import { useState } from "react";
+import { useSkyTheme } from "./components/pixel/SceneTransitionManager";
+import WelcomeCard from "./components/bento/WelcomeCard";
+import AtmosphereCard from "./components/bento/AtmosphereCard";
+import VideographyCard from "./components/bento/VideographyCard";
+import PhotographyCard from "./components/bento/PhotographyCard";
+import ToolsGearCard from "./components/bento/ToolsGearCard";
+import SocialsCard from "./components/bento/SocialsCard";
 
 export default function Home() {
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+  const { activeTheme } = useSkyTheme();
+
+  const isBrightSky = activeTheme === "day-blue" || activeTheme === "day-grey";
+
+  const chromePillStyle = {
+    backgroundColor: isBrightSky
+      ? "rgba(244, 249, 255, 0.78)"
+      : "rgba(15, 12, 28, 0.36)",
+    borderColor: isBrightSky
+      ? "var(--bento-border-soft)"
+      : "rgba(255, 255, 255, 0.14)",
+    textShadow: isBrightSky ? "none" : "0 1px 4px rgba(0, 0, 0, 0.4)",
+  };
+
   return (
-    <div className="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-7xl flex-col justify-center px-4 py-12 sm:px-6 lg:px-8">
-      <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12">
-        <section className="flex flex-col gap-6 lg:col-span-7">
-          <div className="inline-flex w-fit items-center gap-2 border border-border-bright bg-bg-surface px-3 py-1 shadow-sm">
-            <span className="h-2 w-2 bg-accent-warm animate-pulse" />
-            <span className="font-pixel text-[10px] text-text-accent">
-              PLACEHOLDER
-            </span>
-          </div>
+    <div className="relative min-h-screen px-4 py-8 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col justify-center">
+      {/* Bento Grid Header / Micro Breadcrumb */}
+      <header className="mb-14 sm:mb-20 flex items-center justify-between gap-4">
+        <div
+          style={chromePillStyle}
+          className="flex items-center gap-3 rounded-full border px-3.5 py-1.5 backdrop-blur-sm transition-colors duration-700"
+        >
+          <div
+            style={{
+              backgroundColor: "var(--bento-accent)",
+              boxShadow: "0 0 8px var(--bento-accent)",
+            }}
+            className="h-2 w-2 rounded-full animate-pulse transition-colors duration-700"
+          />
+          <span
+            style={{ color: "var(--page-text)" }}
+            className="font-mono text-xs uppercase tracking-widest font-medium transition-colors duration-700"
+          >
+            Aiman // Creative Archive &amp; Laboratory
+          </span>
+        </div>
 
-          {/* Heading */}
-          <div className="space-y-3">
-            <h1 className="font-pixel text-2xl leading-relaxed text-text-primary sm:text-3xl lg:text-4xl">
-              SOMETHING SOMETHING <br />
-              I'M <span className="text-accent-primary">AIMAN</span>.
-            </h1>
-            <p className="max-w-xl text-base leading-relaxed text-text-secondary sm:text-lg">
-              Im a bla bla bla
-            </p>
-          </div>
+        <div
+          style={{
+            ...chromePillStyle,
+            color: "var(--page-text-muted)",
+          }}
+          className="hidden sm:flex items-center gap-4 rounded-full border px-3.5 py-1.5 font-mono text-[11px] backdrop-blur-sm transition-colors duration-700"
+        >
+          <span>SYSTEM: ONLINE</span>
+          <span>PARALLAX DRIFT: ACTIVE</span>
+          <span
+            style={{
+              backgroundColor: "var(--bento-pill-bg)",
+              color: "var(--bento-pill-text)",
+              borderColor: "var(--bento-border-soft)",
+              textShadow: "none",
+            }}
+            className="rounded-full border px-2 py-0.5 font-semibold transition-colors duration-700"
+          >
+            v2.4.0
+          </span>
+        </div>
+      </header>
 
-          {/* Quest CTA Buttons */}
-          <div className="flex flex-wrap items-center gap-4 pt-2">
-            <Link
-              href="/projects"
-              className="border-2 border-accent-primary bg-accent-primary px-5 py-3 font-pixel text-xs text-bg-deep shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] transition-all hover:bg-accent-primary/90 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
-            >
-              ▶ EXPLORE QUESTS
-            </Link>
-
-            <Link
-              href="/about"
-              className="border-2 border-border-bright bg-bg-surface px-5 py-3 font-pixel text-xs text-text-primary shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] transition-all hover:border-accent-primary hover:text-accent-primary active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
-            >
-              CHARACTER STATS
-            </Link>
-          </div>
+      {/* Main 12-Column Responsive Bento Grid */}
+      <div
+        aria-label="Bento portfolio grid"
+        className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-12 gap-5"
+      >
+        {/* Row 1: Big Welcome Card (8 cols) + Atmosphere Controller (4 cols) */}
+        <section className="col-span-1 md:col-span-6 lg:col-span-8 flex flex-col">
+          <WelcomeCard
+            onOpenReel={() => setIsVideoModalOpen(true)}
+            onOpenGallery={() => setIsPhotoModalOpen(true)}
+          />
         </section>
 
-        {/* Right Column: Game Scene Viewport Frame (5 cols) */}
-        <section className="flex justify-center lg:col-span-5">
-          <div className="relative aspect-square w-full max-w-[420px] border-4 border-border-bright bg-bg-surface/50 p-3 shadow-[6px_6px_0px_0px_rgba(0,0,0,0.6)]">
-            {/* Inner CRT/Canvas Frame */}
-            <div className="flex h-full w-full flex-col items-center justify-center border-2 border-dashed border-border-bright/60 bg-bg-deep/80 p-6 text-center">
-              <span className="font-pixel text-xs text-text-accent animate-pulse">
-                [ PIXEL SCENE CANVAS ]
-              </span>
-              <p className="mt-2 text-xs text-text-secondary">
-                Parallax mountain & particle engine will mount here
-              </p>
-            </div>
-          </div>
+        <section className="col-span-1 md:col-span-6 lg:col-span-4 flex flex-col">
+          <AtmosphereCard />
+        </section>
+
+        {/* Row 2: Videography Works Card (6 cols) + Photography Projects Card (6 cols) */}
+        <section className="col-span-1 md:col-span-6 lg:col-span-6 flex flex-col">
+          <VideographyCard
+            isModalOpen={isVideoModalOpen}
+            onOpenModal={() => setIsVideoModalOpen(true)}
+            onCloseModal={() => setIsVideoModalOpen(false)}
+          />
+        </section>
+
+        <section className="col-span-1 md:col-span-6 lg:col-span-6 flex flex-col">
+          <PhotographyCard
+            isModalOpen={isPhotoModalOpen}
+            onOpenModal={() => setIsPhotoModalOpen(true)}
+            onCloseModal={() => setIsPhotoModalOpen(false)}
+          />
+        </section>
+
+        {/* Row 3: Tools & Gear Stack (7 cols) + Socials & Connect (5 cols) */}
+        <section className="col-span-1 md:col-span-6 lg:col-span-7 flex flex-col">
+          <ToolsGearCard />
+        </section>
+
+        <section className="col-span-1 md:col-span-6 lg:col-span-5 flex flex-col">
+          <SocialsCard />
         </section>
       </div>
+
+      {/* Bento Footer */}
+      <footer
+        style={{
+          borderColor: isBrightSky
+            ? "color-mix(in srgb, var(--page-text) 20%, transparent)"
+            : "rgba(255, 255, 255, 0.14)",
+        }}
+        className="mt-8 border-t pt-4 transition-colors duration-700"
+      >
+        <div
+          style={{
+            ...chromePillStyle,
+            color: "var(--page-text-muted)",
+          }}
+          className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border px-4 py-2.5 font-mono text-[11px] backdrop-blur-sm transition-colors duration-700"
+        >
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <span>© 2026 AIMAN. ALL RIGHTS RESERVED.</span>
+            <span>•</span>
+            <span>CINEMATOGRAPHY · SHADERS · CODE</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span>PIXEL BACKDROP ENGINE</span>
+            <span>•</span>
+            <span style={{ color: "var(--page-text)" }} className="font-medium">
+              CRAFTED WITH PRECISION
+            </span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
