@@ -15,9 +15,9 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Aiman // Creative Technologist, Videographer & Visual Artist",
+  title: "Aiman Haqeem — Junior AI/ML Engineer",
   description:
-    "Portfolio of Aiman — Creative Technologist, Videographer, and Visual Artist crafting high-craft digital, cinematic, and analog experiences.",
+    "Portfolio of Aiman Haqeem — Junior AI/ML Engineer, photographer, video editor, and occasional game streamer.",
 };
 
 export default function RootLayout({

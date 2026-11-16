@@ -51,11 +51,12 @@ export function useSkyTheme(): SkyContextValue {
 
 // Route to sky theme mapping for all pages
 export const DEFAULT_ROUTE_SCENE_MAP: Record<string, SkyThemeKey> = {
-  "/": "sunset-pink",            // Home: Clouds 4 (Afternoon Pink / Sunset)
-  "/about": "day-blue",          // About: Clouds 1 (Day Blue)
-  "/projects": "night-blue",     // Projects: Clouds 3 (Night Dark Blue)
-  "/skills": "afternoon-orange", // Skills: Clouds 6 (Afternoon Orange)
-  "/contact": "night-purple",    // Contact: Clouds 8 (Night Purple)
+  "/": "sunset-pink",          // Home: Clouds 4 (Twilight Pink)
+  "/about": "sunset-pink",     // About: Clouds 4 (Twilight Pink)
+  "/projects": "sunset-pink",  // Projects: Clouds 4 (Twilight Pink)
+  "/interests": "sunset-pink", // Interests: Clouds 4 (Twilight Pink)
+  "/skills": "sunset-pink",    // Skills: Clouds 4 (Twilight Pink)
+  "/contact": "sunset-pink",   // Contact: Clouds 4 (Twilight Pink)
 };
 
 const ALL_THEME_KEYS: SkyThemeKey[] = [
@@ -73,7 +74,7 @@ function getThemeForPath(path: string): SkyThemeKey {
   if (path in DEFAULT_ROUTE_SCENE_MAP) {
     return DEFAULT_ROUTE_SCENE_MAP[path];
   }
-  return path.startsWith("/projects") ? "night-blue" : "sunset-pink";
+  return "sunset-pink";
 }
 
 type CurtainPhase = "idle" | "covering" | "holding" | "opening";
@@ -92,12 +93,6 @@ interface CurtainColumnConfig {
 
 const CURTAIN_COL_COUNT = 10;
 const CURTAIN_HOLD_MS = 160;
-const REVEAL_CYCLE_THEMES: SkyThemeKey[] = [
-  "day-blue",
-  "afternoon-orange",
-  "sunset-pink",
-  "night-blue",
-];
 
 function randomBetween(min: number, max: number): number {
   return min + Math.random() * (max - min);
@@ -220,7 +215,7 @@ export default function SceneTransitionManager({
   const initialTheme = getThemeForPath(pathname);
 
   const [activeTheme, setActiveTheme] = useState<SkyThemeKey>(initialTheme);
-  const [borderMode, setBorderMode] = useState<CardBorderMode>("soft");
+  const [borderMode, setBorderMode] = useState<CardBorderMode>("crisp");
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
   const [activeTransitionKind, setActiveTransitionKind] =
     useState<TransitionKind>("none");
@@ -356,9 +351,7 @@ export default function SceneTransitionManager({
         typeof window !== "undefined" &&
         window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      const currentIdx = REVEAL_CYCLE_THEMES.indexOf(currentThemeRef.current);
-      const nextTheme =
-        REVEAL_CYCLE_THEMES[(currentIdx + 1) % REVEAL_CYCLE_THEMES.length];
+      const nextTheme = currentThemeRef.current;
 
       const swapScene = () => {
         setInstantSkySwitch(true);
