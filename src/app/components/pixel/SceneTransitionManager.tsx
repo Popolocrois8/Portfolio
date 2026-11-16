@@ -4,32 +4,35 @@ import {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   useCallback,
+  CSSProperties,
   ReactNode,
 } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import ParallaxSky from "./ParallaxSky";
-import SpeedStreaks, { PanDirection } from "./SpeedStreaks";
 import {
   SkyThemeKey,
   SKY_THEMES,
   SkyThemeConfig,
   resolveSkyTheme,
+  CardBorderMode,
+  BentoPalette,
+  getBentoPalette,
 } from "./skyThemes";
-
-interface ActiveTransition {
-  from: SkyThemeKey;
-  to: SkyThemeKey;
-  direction: PanDirection;
-}
 
 interface SkyContextValue {
   activeTheme: SkyThemeKey;
-  setTheme: (theme: SkyThemeKey, direction?: PanDirection) => void;
+  setTheme: (theme: SkyThemeKey, direction?: string) => void;
   availableThemes: SkyThemeConfig[];
   isTransitioning: boolean;
+  isRevealing: boolean;
+  triggerRectangleReveal: (targetPath?: string) => void;
+  palette: BentoPalette;
+  borderMode: CardBorderMode;
+  setBorderMode: (mode: CardBorderMode) => void;
 }
 
 const SkyContext = createContext<SkyContextValue | null>(null);
@@ -51,8 +54,6 @@ export const DEFAULT_ROUTE_SCENE_MAP: Record<string, SkyThemeKey> = {
   "/contact": "night-purple",    // Contact: Clouds 8 (Night Purple)
 };
 
-const ROUTE_ORDER = ["/", "/about", "/projects", "/skills", "/contact"];
-
 const ALL_THEME_KEYS: SkyThemeKey[] = [
   "day-blue",
   "afternoon",
@@ -71,14 +72,74 @@ function getThemeForPath(path: string): SkyThemeKey {
   return path.startsWith("/projects") ? "night-blue" : "sunset-pink";
 }
 
-function getPanDirection(fromPath: string, toPath: string): PanDirection {
-  const fromIndex = ROUTE_ORDER.indexOf(fromPath);
-  const toIndex = ROUTE_ORDER.indexOf(toPath);
+type CurtainPhase = "idle" | "covering" | "holding" | "opening";
 
-  if (fromIndex !== -1 && toIndex !== -1) {
-    return toIndex >= fromIndex ? "right" : "left";
-  }
-  return "right";
+interface CurtainColumnConfig {
+  splitPct: number;
+  coverTopDelay: number;
+  coverBottomDelay: number;
+  coverTopDuration: number;
+  coverBottomDuration: number;
+  revealTopDelay: number;
+  revealBottomDelay: number;
+  revealTopDuration: number;
+  revealBottomDuration: number;
+}
+
+const CURTAIN_COL_COUNT = 10;
+const CURTAIN_HOLD_MS = 160;
+const REVEAL_CYCLE_THEMES: SkyThemeKey[] = [
+  "day-blue",
+  "afternoon-orange",
+  "sunset-pink",
+  "night-blue",
+];
+
+function randomBetween(min: number, max: number): number {
+  return min + Math.random() * (max - min);
+}
+
+// Fresh randomized left-to-right column timing and contact height on every transition
+function generateCurtainColumns(): CurtainColumnConfig[] {
+  return Array.from({ length: CURTAIN_COL_COUNT }, (_, i) => {
+    const splitPct = Math.round(randomBetween(16, 84));
+
+    const coverBase = i * 48;
+    const coverTopDelay = Math.max(
+      0,
+      Math.round(coverBase + randomBetween(-25, 65))
+    );
+    const coverBottomDelay = Math.max(
+      0,
+      Math.round(coverBase + randomBetween(-25, 65))
+    );
+    const coverTopDuration = Math.round(randomBetween(360, 490));
+    const coverBottomDuration = Math.round(randomBetween(360, 490));
+
+    const revealBase = i * 44;
+    const revealTopDelay = Math.max(
+      0,
+      Math.round(revealBase + randomBetween(-20, 55))
+    );
+    const revealBottomDelay = Math.max(
+      0,
+      Math.round(revealBase + randomBetween(-20, 55))
+    );
+    const revealTopDuration = Math.round(randomBetween(340, 460));
+    const revealBottomDuration = Math.round(randomBetween(340, 460));
+
+    return {
+      splitPct,
+      coverTopDelay,
+      coverBottomDelay,
+      coverTopDuration,
+      coverBottomDuration,
+      revealTopDelay,
+      revealBottomDelay,
+      revealTopDuration,
+      revealBottomDuration,
+    };
+  });
 }
 
 export default function SceneTransitionManager({
@@ -87,53 +148,88 @@ export default function SceneTransitionManager({
   children?: ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const initialTheme = getThemeForPath(pathname);
 
   const [activeTheme, setActiveTheme] = useState<SkyThemeKey>(initialTheme);
-  const [transition, setTransition] = useState<ActiveTransition | null>(null);
+  const [borderMode, setBorderMode] = useState<CardBorderMode>("soft");
+  const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
+  const [curtainPhase, setCurtainPhase] = useState<CurtainPhase>("idle");
+  const [curtainColumns, setCurtainColumns] = useState<CurtainColumnConfig[]>(
+    []
+  );
+  const [reducedMotionFade, setReducedMotionFade] = useState<boolean>(false);
+  const [instantSkySwitch, setInstantSkySwitch] = useState<boolean>(false);
+  const [revealKey, setRevealKey] = useState<number>(0);
+
+  const curtainTimersRef = useRef<NodeJS.Timeout[]>([]);
+
+  const palette = useMemo(() => getBentoPalette(activeTheme), [activeTheme]);
+
+  const themeCssVars = useMemo(
+    () =>
+      ({
+        "--bento-bg-primary": palette.primary,
+        "--bento-bg-secondary": palette.secondary,
+        "--bento-surface": palette.surface,
+        "--bento-border-soft": palette.softBorder,
+        "--bento-border-crisp": palette.crispBorder,
+        "--bento-text": palette.text,
+        "--bento-text-muted": palette.textMuted,
+        "--bento-accent": palette.accent,
+        "--bento-accent-text": palette.accentText,
+        "--bento-accent-soft": palette.accentSoft,
+        "--bento-pill-bg": palette.pillBg,
+        "--bento-pill-text": palette.pillText,
+        "--bento-shadow-color": palette.shadowColor,
+        "--page-text": palette.pageText,
+        "--page-text-muted": palette.pageTextMuted,
+      }) as Record<string, string>,
+    [palette]
+  );
+
+  // Sync palette variables to :root so global selection and scrollbars follow the active sky
+  useEffect(() => {
+    const rootStyle = document.documentElement.style;
+    for (const [key, value] of Object.entries(themeCssVars)) {
+      rootStyle.setProperty(key, value);
+    }
+  }, [themeCssVars]);
 
   const prevPathRef = useRef(pathname);
   const currentThemeRef = useRef(initialTheme);
   const isInitialMount = useRef(true);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Trigger transition between any two themes using Option 1 (Parallax Velocity Cross-Dissolve)
-  const triggerTransition = useCallback(
-    (targetTheme: SkyThemeKey, direction: PanDirection = "right") => {
-      const fromTheme = currentThemeRef.current;
-      if (fromTheme === targetTheme) return;
+  // Pure slow cross-dissolve (1.4s duration, zero lateral drift, uninterrupted clouds)
+  const triggerTransition = useCallback((targetTheme: SkyThemeKey) => {
+    const fromTheme = currentThemeRef.current;
+    if (fromTheme === targetTheme) return;
 
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
 
-      currentThemeRef.current = targetTheme;
-      setActiveTheme(targetTheme);
-      setTransition({
-        from: fromTheme,
-        to: targetTheme,
-        direction,
-      });
+    currentThemeRef.current = targetTheme;
+    setActiveTheme(targetTheme);
+    setIsTransitioning(true);
 
-      // 550ms Option 1 transition window
-      timerRef.current = setTimeout(() => {
-        setTransition(null);
-        timerRef.current = null;
-      }, 550);
-    },
-    []
-  );
+    timerRef.current = setTimeout(() => {
+      setIsTransitioning(false);
+      timerRef.current = null;
+    }, 1400);
+  }, []);
 
-  // Manual setTheme API for buttons, selectors, or page triggers
+  // Public setTheme API for cards and buttons
   const setTheme = useCallback(
-    (theme: SkyThemeKey, direction: PanDirection = "right") => {
+    (theme: SkyThemeKey) => {
       const resolved = resolveSkyTheme(theme);
-      triggerTransition(resolved, direction);
+      triggerTransition(resolved);
     },
     [triggerTransition]
   );
 
-  // Route-based transition coordinator across all pages
+  // Route coordinator
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
@@ -148,9 +244,7 @@ export default function SceneTransitionManager({
     prevPathRef.current = pathname;
 
     const targetTheme = getThemeForPath(pathname);
-    const direction = getPanDirection(previousPath, pathname);
-
-    triggerTransition(targetTheme, direction);
+    triggerTransition(targetTheme);
 
     return () => {
       if (timerRef.current) {
@@ -159,37 +253,131 @@ export default function SceneTransitionManager({
     };
   }, [pathname, initialTheme, triggerTransition]);
 
-  // CSS class assignment for each persistent layer
-  const getLayerClass = (themeKey: SkyThemeKey): string => {
-    if (!transition) {
-      // Idle state
-      return themeKey === activeTheme
-        ? "opacity-100 z-0"
-        : "opacity-0 -z-10 pointer-events-none";
+  const clearCurtainTimers = useCallback(() => {
+    for (const t of curtainTimersRef.current) {
+      clearTimeout(t);
     }
+    curtainTimersRef.current = [];
+  }, []);
 
-    // Outgoing layer: drifts 15vw and fades out smoothly without resetting clouds
-    if (themeKey === transition.from) {
-      return transition.direction === "right"
-        ? "animate-dissolve-out-left z-0"
-        : "animate-dissolve-out-right z-0";
-    }
+  // 10-column opposing-bars Curtain Transition (Top & Bottom per column close to varied contact points -> Black Hold -> Part back Up & Down)
+  const triggerRectangleReveal = useCallback(
+    (targetPath = "/") => {
+      clearCurtainTimers();
 
-    // Incoming layer: drifts in 15vw and fades in smoothly
-    if (themeKey === transition.to) {
-      return transition.direction === "right"
-        ? "animate-dissolve-in-from-right z-10"
-        : "animate-dissolve-in-from-left z-10";
-    }
+      const prefersReducedMotion =
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    return "opacity-0 -z-10 pointer-events-none";
-  };
+      const currentIdx = REVEAL_CYCLE_THEMES.indexOf(currentThemeRef.current);
+      const nextTheme =
+        REVEAL_CYCLE_THEMES[(currentIdx + 1) % REVEAL_CYCLE_THEMES.length];
+
+      const swapScene = () => {
+        setInstantSkySwitch(true);
+        if (timerRef.current) {
+          clearTimeout(timerRef.current);
+          timerRef.current = null;
+        }
+        currentThemeRef.current = nextTheme;
+        setActiveTheme(nextTheme);
+        setIsTransitioning(false);
+
+        router.push(targetPath);
+        setRevealKey((k) => k + 1);
+      };
+
+      if (prefersReducedMotion) {
+        setReducedMotionFade(true);
+        setCurtainPhase("covering");
+
+        const holdTimer = setTimeout(() => {
+          setCurtainPhase("holding");
+          swapScene();
+        }, 190);
+
+        const openTimer = setTimeout(() => {
+          setCurtainPhase("opening");
+        }, 290);
+
+        const doneTimer = setTimeout(() => {
+          setCurtainPhase("idle");
+          setReducedMotionFade(false);
+          setInstantSkySwitch(false);
+          curtainTimersRef.current = [];
+        }, 480);
+
+        curtainTimersRef.current = [holdTimer, openTimer, doneTimer];
+        return;
+      }
+
+      const nextColumns = generateCurtainColumns();
+      const coverTotal = Math.max(
+        ...nextColumns.map((c) =>
+          Math.max(
+            c.coverTopDelay + c.coverTopDuration,
+            c.coverBottomDelay + c.coverBottomDuration
+          )
+        )
+      );
+      const revealTotal = Math.max(
+        ...nextColumns.map((c) =>
+          Math.max(
+            c.revealTopDelay + c.revealTopDuration,
+            c.revealBottomDelay + c.revealBottomDuration
+          )
+        )
+      );
+
+      setReducedMotionFade(false);
+      setCurtainColumns(nextColumns);
+
+      // Phase 1: Both top & bottom bars per column glide inward (left-to-right + random jitter)
+      setCurtainPhase("covering");
+
+      // Phase 2: Hold solid pitch-black screen while page redirects & sky swaps underneath
+      const coverEnd = coverTotal + 16;
+      const holdTimer = setTimeout(() => {
+        setCurtainPhase("holding");
+        swapScene();
+      }, coverEnd);
+
+      // Phase 3: Top bars retract back UP and bottom bars retract back DOWN (left-to-right + jitter)
+      const openStart = coverEnd + CURTAIN_HOLD_MS;
+      const openTimer = setTimeout(() => {
+        setCurtainPhase("opening");
+      }, openStart);
+
+      // Phase 4: Clean up curtain and restore normal slow sky cross-dissolve
+      const doneTimer = setTimeout(() => {
+        setCurtainPhase("idle");
+        setInstantSkySwitch(false);
+        curtainTimersRef.current = [];
+      }, openStart + revealTotal + 24);
+
+      curtainTimersRef.current = [holdTimer, openTimer, doneTimer];
+    },
+    [clearCurtainTimers, router]
+  );
+
+  useEffect(() => {
+    return () => {
+      clearCurtainTimers();
+    };
+  }, [clearCurtainTimers]);
+
+  const isRevealing = curtainPhase !== "idle";
 
   const contextValue: SkyContextValue = {
     activeTheme,
     setTheme,
     availableThemes: Object.values(SKY_THEMES),
-    isTransitioning: Boolean(transition),
+    isTransitioning,
+    isRevealing,
+    triggerRectangleReveal,
+    palette,
+    borderMode,
+    setBorderMode,
   };
 
   return (
@@ -198,23 +386,118 @@ export default function SceneTransitionManager({
         aria-hidden="true"
         className="fixed inset-0 -z-10 pointer-events-none select-none overflow-hidden"
       >
-        {/* All Sky Layers Persistently Mounted (Option 1: 15vw bleed, continuous cloud drift) */}
-        {ALL_THEME_KEYS.map((themeKey) => (
-          <div
-            key={themeKey}
-            className={`fixed inset-y-0 -left-[15vw] -right-[15vw] ${getLayerClass(
-              themeKey
-            )}`}
-          >
-            <ParallaxSky theme={themeKey} className="absolute inset-0" />
-          </div>
-        ))}
+        {/* All Sky Layers Persistently Mounted: Pure Slow Cross-Dissolve (snaps instantly while curtain is black) */}
+        {ALL_THEME_KEYS.map((themeKey) => {
+          const isActive = themeKey === activeTheme;
 
-        {/* Anime Speed Streaks: rendered inside background system */}
-        {transition && <SpeedStreaks direction={transition.direction} />}
+          return (
+            <div
+              key={themeKey}
+              className={`fixed inset-0 ${
+                instantSkySwitch
+                  ? "transition-none"
+                  : "transition-opacity duration-[1400ms] ease-in-out"
+              } will-change-[opacity] ${
+                isActive
+                  ? "opacity-100 z-0"
+                  : "opacity-0 -z-10 pointer-events-none"
+              }`}
+            >
+              <ParallaxSky theme={themeKey} className="absolute inset-0" />
+            </div>
+          );
+        })}
       </div>
 
-      {children}
+      <div
+        key={revealKey}
+        data-border-mode={borderMode}
+        style={themeCssVars as CSSProperties}
+        className="flex-1 flex flex-col"
+      >
+        {children}
+      </div>
+
+      {/* 10-Column Opposing-Bars Curtain Overlay */}
+      {curtainPhase !== "idle" &&
+        (reducedMotionFade ? (
+          <div
+            aria-hidden="true"
+            className={`fixed inset-0 z-[9999] bg-black pointer-events-auto ${
+              curtainPhase === "covering"
+                ? "animate-curtain-fade-in"
+                : curtainPhase === "opening"
+                ? "animate-curtain-fade-out"
+                : "opacity-100"
+            }`}
+          />
+        ) : (
+          <div
+            aria-hidden="true"
+            className="fixed inset-0 z-[9999] grid grid-cols-10 overflow-hidden pointer-events-auto"
+          >
+            {curtainColumns.map((col, i) => {
+              const topClass =
+                curtainPhase === "covering"
+                  ? "animate-rect-drop-in"
+                  : curtainPhase === "opening"
+                  ? "animate-rect-lift-out"
+                  : "";
+
+              const bottomClass =
+                curtainPhase === "covering"
+                  ? "animate-rect-rise-in"
+                  : curtainPhase === "opening"
+                  ? "animate-rect-drop-out"
+                  : "";
+
+              const topStyle: CSSProperties = {
+                height: `calc(${col.splitPct}% + 3px)`,
+                ...(curtainPhase === "holding"
+                  ? { transform: "translate3d(0, 0%, 0)" }
+                  : curtainPhase === "covering"
+                  ? {
+                      animationDelay: `${col.coverTopDelay}ms`,
+                      animationDuration: `${col.coverTopDuration}ms`,
+                    }
+                  : {
+                      animationDelay: `${col.revealTopDelay}ms`,
+                      animationDuration: `${col.revealTopDuration}ms`,
+                    }),
+              };
+
+              const bottomStyle: CSSProperties = {
+                height: `calc(${100 - col.splitPct}% + 3px)`,
+                ...(curtainPhase === "holding"
+                  ? { transform: "translate3d(0, 0%, 0)" }
+                  : curtainPhase === "covering"
+                  ? {
+                      animationDelay: `${col.coverBottomDelay}ms`,
+                      animationDuration: `${col.coverBottomDuration}ms`,
+                    }
+                  : {
+                      animationDelay: `${col.revealBottomDelay}ms`,
+                      animationDuration: `${col.revealBottomDuration}ms`,
+                    }),
+              };
+
+              return (
+                <div key={i} className="relative h-full">
+                  {/* Top bar: glides down to contact height, retracts back up */}
+                  <div
+                    style={topStyle}
+                    className={`absolute top-0 -left-[1px] -right-[1px] bg-black will-change-transform ${topClass}`}
+                  />
+                  {/* Bottom bar: glides up to contact height, retracts back down */}
+                  <div
+                    style={bottomStyle}
+                    className={`absolute bottom-0 -left-[1px] -right-[1px] bg-black will-change-transform ${bottomClass}`}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        ))}
     </SkyContext.Provider>
   );
 }
