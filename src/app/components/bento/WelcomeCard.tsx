@@ -24,7 +24,7 @@ export default function WelcomeCard() {
       {/* Inner card background layer: holds pastel surface, border, and clipped decorative shapes */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl bento-card bento-card-primary"
+        className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl bento-card bento-card-1"
       >
         {/* Subtle decorative pastel shapes inside the card */}
         <div className="absolute -right-12 -top-16 h-72 w-72 rounded-full bg-[var(--bento-bg-secondary)] opacity-75 transition-colors duration-700" />

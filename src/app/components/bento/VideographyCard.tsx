@@ -110,7 +110,7 @@ export default function VideographyCard({
       {/* Bento Grid Card (Pastel Companion Tint) */}
       <div
         onClick={handleOpen}
-        className="bento-card bento-card-secondary relative group flex cursor-pointer flex-col justify-between overflow-hidden rounded-2xl p-6 md:p-7 transition-colors duration-700 active:scale-[0.995]"
+        className="bento-card bento-card-4 relative group flex cursor-pointer flex-col justify-between overflow-hidden rounded-2xl p-6 md:p-7 transition-colors duration-700 active:scale-[0.995]"
       >
         {/* Subtle corner crosshairs */}
         <div className="pointer-events-none absolute left-3 top-3 font-mono text-[10px] text-[var(--bento-text-muted)] opacity-40 select-none transition-colors duration-700">

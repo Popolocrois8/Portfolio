@@ -13,9 +13,12 @@ export type SkyThemeAlias = "sunset" | "night";
 
 export type CardBorderMode = "soft" | "crisp";
 
+export type CardColorTuple = readonly [string, string, string, string, string];
+
 export interface BentoPalette {
   primary: string;
   secondary: string;
+  cardColors: CardColorTuple;
   surface: string;
   softBorder: string;
   crispBorder: string;
@@ -34,6 +37,7 @@ export interface BentoPalette {
 const DAY_BLUE_PALETTE: BentoPalette = {
   primary: "#DCEEFF",
   secondary: "#F4F9FF",
+  cardColors: ["#DCEEFF", "#DCF6FA", "#DCFAEE", "#DCE4FA", "#E6DCFA"],
   surface: "#FFFFFF",
   softBorder: "#A6CEFA",
   crispBorder: "#0F2942",
@@ -52,6 +56,7 @@ const DAY_BLUE_PALETTE: BentoPalette = {
 const AFTERNOON_ORANGE_PALETTE: BentoPalette = {
   primary: "#FFE7D1",
   secondary: "#FFF6EC",
+  cardColors: ["#FFE7D1", "#FFF1D1", "#FBEAD1", "#FADCD4", "#F7F6D4"],
   surface: "#FFFDF9",
   softBorder: "#F7BE91",
   crispBorder: "#3B2012",
@@ -70,6 +75,7 @@ const AFTERNOON_ORANGE_PALETTE: BentoPalette = {
 const SUNSET_PINK_PALETTE: BentoPalette = {
   primary: "#FADCE8",
   secondary: "#FFF2F7",
+  cardColors: ["#FADCE8", "#FADCFA", "#FADEDC", "#F0DCFA", "#FAE3DC"],
   surface: "#FFFFFF",
   softBorder: "#F2B1CC",
   crispBorder: "#2E162B",
@@ -88,6 +94,7 @@ const SUNSET_PINK_PALETTE: BentoPalette = {
 const NIGHT_BLUE_PALETTE: BentoPalette = {
   primary: "#E3E1FC",
   secondary: "#F4F3FF",
+  cardColors: ["#E3E1FC", "#ECDCFA", "#DCE4FC", "#F2DCFA", "#DCEEFB"],
   surface: "#FFFFFF",
   softBorder: "#BEB9F0",
   crispBorder: "#181A38",

@@ -7,6 +7,7 @@ import SocialsCard from "./components/bento/SocialsCard";
 import ToolsGearCard from "./components/bento/ToolsGearCard";
 import InterestsCard from "./components/bento/InterestsCard";
 import MediaShowcaseCard from "./components/bento/MediaShowcaseCard";
+import ConstructionLanyard from "./components/pixel/ConstructionLanyard";
 
 export default function Home() {
   const { activeTheme } = useSkyTheme();
@@ -24,7 +25,10 @@ export default function Home() {
   };
 
   return (
-    <div className="relative min-h-screen px-4 pt-16 pb-8 sm:px-6 sm:pt-24 md:pt-36 xl:pt-44 lg:px-8 max-w-7xl mx-auto flex flex-col justify-center">
+    <div className="relative w-full">
+      <ConstructionLanyard />
+
+      <div className="relative min-h-screen px-4 pt-36 pb-8 sm:px-6 sm:pt-36 md:pt-40 xl:pt-48 lg:px-8 max-w-7xl mx-auto flex flex-col justify-center">
       {/* Main 12-Column Asymmetrical Interlocking Bento Grid */}
       <div
         aria-label="Bento portfolio grid"
@@ -77,6 +81,7 @@ export default function Home() {
           </span>
         </div>
       </footer>
+      </div>
     </div>
   );
 }

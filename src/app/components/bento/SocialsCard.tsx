@@ -147,7 +147,7 @@ export default function SocialsCard() {
   return (
     <div
       id="contact-card"
-      className="bento-card bento-card-secondary relative group flex h-full flex-col justify-between overflow-hidden rounded-2xl p-6 md:p-7 transition-colors duration-700"
+      className="bento-card bento-card-3 relative group flex h-full flex-col justify-between overflow-hidden rounded-2xl p-6 md:p-7 transition-colors duration-700"
     >
       {/* Decorative corner crosshairs */}
       <div

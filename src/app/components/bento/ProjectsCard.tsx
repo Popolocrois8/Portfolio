@@ -21,7 +21,7 @@ export default function ProjectsCard() {
     <button
       type="button"
       onClick={() => triggerPixelTransition("/projects")}
-      className="bento-card bento-card-secondary group relative flex h-full w-full cursor-pointer flex-col justify-between overflow-hidden rounded-2xl p-6 text-left transition-transform duration-300 ease-out hover:-translate-y-0.5 active:translate-y-0 md:p-7"
+      className="bento-card bento-card-2 group relative flex h-full w-full cursor-pointer flex-col justify-between overflow-hidden rounded-2xl p-6 text-left transition-transform duration-300 ease-out hover:-translate-y-0.5 active:translate-y-0 md:p-7"
     >
       {/* Decorative corner crosshairs */}
       <span

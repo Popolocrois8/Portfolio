@@ -357,6 +357,41 @@
   animation-fill-mode: both;
 }
 
+@keyframes marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(calc(-100% - var(--gap)), 0, 0);
+  }
+}
+
+@keyframes marquee-vertical {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, calc(-100% - var(--gap)), 0);
+  }
+}
+
+@layer utilities {
+  .animate-marquee {
+    animation: marquee var(--duration, 40s) linear infinite;
+  }
+
+  .animate-marquee-vertical {
+    animation: marquee-vertical var(--duration, 40s) linear infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-marquee-vertical {
+    animation: none !important;
+  }
+}
+
 @theme {
   /*sunset into night palette*/
   --color-bg-deep: hsl(260 40% 10%);
@@ -394,6 +429,11 @@
 
   --bento-bg-primary: #FADCE8;
   --bento-bg-secondary: #FFF2F7;
+  --bento-card-1: #FADCE8;
+  --bento-card-2: #FADCFA;
+  --bento-card-3: #FADEDC;
+  --bento-card-4: #F0DCFA;
+  --bento-card-5: #FAE3DC;
   --bento-surface: #FFFFFF;
   --bento-border-soft: #F2B1CC;
   --bento-border-crisp: #2E162B;
@@ -427,11 +467,38 @@ body {
 }
 
 .bento-card-primary {
-  background-color: var(--bento-bg-primary);
+  --bento-card-bg: var(--bento-bg-primary);
+  background-color: var(--bento-card-bg);
 }
 
 .bento-card-secondary {
-  background-color: var(--bento-bg-secondary);
+  --bento-card-bg: var(--bento-bg-secondary);
+  background-color: var(--bento-card-bg);
+}
+
+.bento-card-1 {
+  --bento-card-bg: var(--bento-card-1);
+  background-color: var(--bento-card-bg);
+}
+
+.bento-card-2 {
+  --bento-card-bg: var(--bento-card-2);
+  background-color: var(--bento-card-bg);
+}
+
+.bento-card-3 {
+  --bento-card-bg: var(--bento-card-3);
+  background-color: var(--bento-card-bg);
+}
+
+.bento-card-4 {
+  --bento-card-bg: var(--bento-card-4);
+  background-color: var(--bento-card-bg);
+}
+
+.bento-card-5 {
+  --bento-card-bg: var(--bento-card-5);
+  background-color: var(--bento-card-bg);
 }
 
 .bento-surface {

@@ -166,7 +166,7 @@ export default function PhotographyCard({
       {/* Bento Grid Card (Primary Pastel) */}
       <div
         onClick={handleOpen}
-        className="bento-card bento-card-primary relative group flex cursor-pointer flex-col justify-between overflow-hidden rounded-2xl p-6 md:p-7 transition-colors duration-700 active:scale-[0.995]"
+        className="bento-card bento-card-3 relative group flex cursor-pointer flex-col justify-between overflow-hidden rounded-2xl p-6 md:p-7 transition-colors duration-700 active:scale-[0.995]"
       >
         {/* Subtle corner crosshairs */}
         <div className="pointer-events-none absolute left-3 top-3 font-mono text-[10px] text-[var(--bento-text-muted)] opacity-40 select-none transition-colors duration-700">
