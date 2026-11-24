@@ -53,6 +53,7 @@ export function useSkyTheme(): SkyContextValue {
 export const DEFAULT_ROUTE_SCENE_MAP: Record<string, SkyThemeKey> = {
   "/": "sunset-pink",          // Home: Clouds 4 (Twilight Pink)
   "/about": "sunset-pink",     // About: Clouds 4 (Twilight Pink)
+  "/resume": "day-grey",       // Resume: Clouds 1 (Day Blue)
   "/projects": "sunset-pink",  // Projects: Clouds 4 (Twilight Pink)
   "/interests": "sunset-pink", // Interests: Clouds 4 (Twilight Pink)
   "/skills": "sunset-pink",    // Skills: Clouds 4 (Twilight Pink)
@@ -513,15 +514,13 @@ export default function SceneTransitionManager({
           return (
             <div
               key={themeKey}
-              className={`fixed inset-0 ${
-                instantSkySwitch
-                  ? "transition-none"
-                  : "transition-opacity duration-[1400ms] ease-in-out"
-              } will-change-[opacity] ${
-                isActive
+              className={`fixed inset-0 ${instantSkySwitch
+                ? "transition-none"
+                : "transition-opacity duration-[1400ms] ease-in-out"
+                } will-change-[opacity] ${isActive
                   ? "opacity-100 z-0"
                   : "opacity-0 -z-10 pointer-events-none"
-              }`}
+                }`}
             >
               <ParallaxSky theme={themeKey} className="absolute inset-0" />
             </div>
@@ -530,9 +529,8 @@ export default function SceneTransitionManager({
       </div>
 
       <div
-        className={`relative flex-1 flex flex-col ${
-          isRevealing ? "overflow-hidden" : ""
-        }`}
+        className={`relative flex-1 flex flex-col ${isRevealing ? "overflow-hidden" : ""
+          }`}
       >
         <div
           key={revealKey}
@@ -543,31 +541,30 @@ export default function SceneTransitionManager({
               ? curtainPhase === "covering"
                 ? { animationDuration: `${pixelMotionDuration.cover}ms` }
                 : curtainPhase === "holding"
-                ? {
+                  ? {
                     transform:
                       pixelDirection === "up"
                         ? "translate3d(0, 64px, 0)"
                         : "translate3d(0, -64px, 0)",
                     opacity: 0.35,
                   }
-                : curtainPhase === "opening"
-                ? { animationDuration: `${pixelMotionDuration.reveal}ms` }
-                : undefined
+                  : curtainPhase === "opening"
+                    ? { animationDuration: `${pixelMotionDuration.reveal}ms` }
+                    : undefined
               : undefined),
           }}
-          className={`flex-1 flex flex-col will-change-[transform,opacity] ${
-            activeTransitionKind === "pixel" && !reducedMotionFade
-              ? curtainPhase === "covering"
-                ? pixelDirection === "up"
-                  ? "animate-page-out-up"
-                  : "animate-page-out-down"
-                : curtainPhase === "opening"
+          className={`flex-1 flex flex-col will-change-[transform,opacity] ${activeTransitionKind === "pixel" && !reducedMotionFade
+            ? curtainPhase === "covering"
+              ? pixelDirection === "up"
+                ? "animate-page-out-up"
+                : "animate-page-out-down"
+              : curtainPhase === "opening"
                 ? pixelDirection === "up"
                   ? "animate-page-in-up"
                   : "animate-page-in-down"
                 : ""
-              : ""
-          }`}
+            : ""
+            }`}
         >
           {children}
         </div>
@@ -578,13 +575,12 @@ export default function SceneTransitionManager({
         (reducedMotionFade ? (
           <div
             aria-hidden="true"
-            className={`fixed inset-0 z-[9999] bg-black pointer-events-auto ${
-              curtainPhase === "covering"
-                ? "animate-curtain-fade-in"
-                : curtainPhase === "opening"
+            className={`fixed inset-0 z-[9999] bg-black pointer-events-auto ${curtainPhase === "covering"
+              ? "animate-curtain-fade-in"
+              : curtainPhase === "opening"
                 ? "animate-curtain-fade-out"
                 : "opacity-100"
-            }`}
+              }`}
           />
         ) : activeTransitionKind === "pixel" ? (
           <div
@@ -600,19 +596,18 @@ export default function SceneTransitionManager({
                 curtainPhase === "covering"
                   ? "animate-pixel-cell-in"
                   : curtainPhase === "opening"
-                  ? "animate-pixel-cell-out"
-                  : "";
+                    ? "animate-pixel-cell-out"
+                    : "";
 
               const cellStyle: CSSProperties =
                 curtainPhase === "holding"
                   ? { opacity: 1, transform: "scale(1)" }
                   : {
-                      animationDelay: `${
-                        curtainPhase === "covering"
-                          ? cell.coverDelay
-                          : cell.revealDelay
+                    animationDelay: `${curtainPhase === "covering"
+                      ? cell.coverDelay
+                      : cell.revealDelay
                       }ms`,
-                    };
+                  };
 
               return (
                 <div
@@ -633,26 +628,26 @@ export default function SceneTransitionManager({
                 curtainPhase === "covering"
                   ? "animate-rect-drop-in"
                   : curtainPhase === "opening"
-                  ? "animate-rect-lift-out"
-                  : "";
+                    ? "animate-rect-lift-out"
+                    : "";
 
               const bottomClass =
                 curtainPhase === "covering"
                   ? "animate-rect-rise-in"
                   : curtainPhase === "opening"
-                  ? "animate-rect-drop-out"
-                  : "";
+                    ? "animate-rect-drop-out"
+                    : "";
 
               const topStyle: CSSProperties = {
                 height: `calc(${col.splitPct}% + 3px)`,
                 ...(curtainPhase === "holding"
                   ? { transform: "translate3d(0, 0%, 0)" }
                   : curtainPhase === "covering"
-                  ? {
+                    ? {
                       animationDelay: `${col.coverTopDelay}ms`,
                       animationDuration: `${col.coverTopDuration}ms`,
                     }
-                  : {
+                    : {
                       animationDelay: `${col.revealTopDelay}ms`,
                       animationDuration: `${col.revealTopDuration}ms`,
                     }),
@@ -663,11 +658,11 @@ export default function SceneTransitionManager({
                 ...(curtainPhase === "holding"
                   ? { transform: "translate3d(0, 0%, 0)" }
                   : curtainPhase === "covering"
-                  ? {
+                    ? {
                       animationDelay: `${col.coverBottomDelay}ms`,
                       animationDuration: `${col.coverBottomDuration}ms`,
                     }
-                  : {
+                    : {
                       animationDelay: `${col.revealBottomDelay}ms`,
                       animationDuration: `${col.revealBottomDuration}ms`,
                     }),

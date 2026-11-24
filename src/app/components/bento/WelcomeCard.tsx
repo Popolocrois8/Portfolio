@@ -79,10 +79,9 @@ export default function WelcomeCard() {
 
           {/* Action CTAs — clean inline text links anchored to bottom-left */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[var(--bento-border-soft)]/60 pt-3.5">
-            <a
-              href="/resume.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={() => triggerPixelTransition("/resume")}
               className="group/resume inline-flex cursor-pointer items-center gap-1.5 text-xs sm:text-sm font-medium text-[var(--bento-text)] transition-colors duration-200 hover:text-[var(--bento-accent)] active:scale-95"
             >
               <span className="underline decoration-2 decoration-transparent underline-offset-4 transition-colors duration-200 group-hover/resume:decoration-[var(--bento-accent)]">
@@ -101,7 +100,7 @@ export default function WelcomeCard() {
                 <path d="M7 17 17 7" />
                 <path d="M7 7h10v10" />
               </svg>
-            </a>
+            </button>
 
             <span
               aria-hidden="true"
