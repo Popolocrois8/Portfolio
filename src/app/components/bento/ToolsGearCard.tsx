@@ -45,7 +45,7 @@ export default function ToolsGearCard() {
   );
 
   return (
-    <div className="bento-card bento-card-primary relative group flex h-full flex-col justify-between overflow-hidden rounded-2xl p-6 transition-colors duration-700 md:p-7">
+    <div className="bento-card bento-card-4 relative group flex h-full flex-col justify-between overflow-hidden rounded-2xl p-6 transition-colors duration-700 md:p-7">
       {/* Decorative corner crosshairs */}
       <div
         aria-hidden="true"

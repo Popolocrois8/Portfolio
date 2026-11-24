@@ -56,6 +56,7 @@ export const DEFAULT_ROUTE_SCENE_MAP: Record<string, SkyThemeKey> = {
   "/resume": "day-grey",       // Resume: Clouds 1 (Day Blue)
   "/projects": "sunset-pink",  // Projects: Clouds 4 (Twilight Pink)
   "/interests": "sunset-pink", // Interests: Clouds 4 (Twilight Pink)
+  "/media": "sunset-pink",     // Media: Clouds 4 (Twilight Pink)
   "/skills": "sunset-pink",    // Skills: Clouds 4 (Twilight Pink)
   "/contact": "sunset-pink",   // Contact: Clouds 4 (Twilight Pink)
 };
@@ -248,6 +249,11 @@ export default function SceneTransitionManager({
       ({
         "--bento-bg-primary": palette.primary,
         "--bento-bg-secondary": palette.secondary,
+        "--bento-card-1": palette.cardColors[0],
+        "--bento-card-2": palette.cardColors[1],
+        "--bento-card-3": palette.cardColors[2],
+        "--bento-card-4": palette.cardColors[3],
+        "--bento-card-5": palette.cardColors[4],
         "--bento-surface": palette.surface,
         "--bento-border-soft": palette.softBorder,
         "--bento-border-crisp": palette.crispBorder,

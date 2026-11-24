@@ -142,7 +142,7 @@ export default function AtmosphereCard() {
   const currentThemeConfig = availableThemes.find((t) => t.id === activeTheme);
 
   return (
-    <div className="bento-card bento-card-secondary relative group flex flex-col justify-between overflow-hidden rounded-2xl p-6 transition-colors duration-700">
+    <div className="bento-card bento-card-5 relative group flex flex-col justify-between overflow-hidden rounded-2xl p-6 transition-colors duration-700">
       {/* Subtle corner crosshairs */}
       <div className="pointer-events-none absolute left-3 top-3 font-mono text-[10px] text-[var(--bento-text-muted)] opacity-40 select-none transition-colors duration-700">
         +
