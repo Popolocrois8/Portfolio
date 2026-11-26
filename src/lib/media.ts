@@ -16,13 +16,14 @@ export interface ArchiveMediaEntry {
 
 export const CLOUDINARY_CLOUD_NAME = "sv4v6yug";
 export const CLOUDINARY_TAG = "portfolio";
-export const CLOUDINARY_TAGS = [
+export const CLOUDINARY_IMAGE_TAGS = ["portfolio"] as const;
+export const CLOUDINARY_VIDEO_TAGS = [
   "portfolio",
   "edit",
   "talking",
   "meme",
 ] as const;
-export const CLOUDINARY_VIDEO_TAGS = CLOUDINARY_TAGS;
+export const CLOUDINARY_TAGS = CLOUDINARY_VIDEO_TAGS;
 
 interface CloudinaryListResource {
   public_id: string;
@@ -187,6 +188,58 @@ function mapCloudinaryResource(
   };
 }
 
+const rawResourceListCache = new Map<string, Promise<CloudinaryListResource[]>>();
+
+export function clearCloudinaryMediaCache(): void {
+  rawResourceListCache.clear();
+}
+
+async function fetchRawResourceList(
+  resourceType: "image" | "video",
+  cloudName: string,
+  tag: string
+): Promise<CloudinaryListResource[]> {
+  const cacheKey = `${cloudName}:${resourceType}:${tag}`;
+  const cached = rawResourceListCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const request = (async () => {
+    const url = `https://res.cloudinary.com/${encodeURIComponent(cloudName)}/${resourceType}/list/${encodeURIComponent(tag)}.json`;
+    const response = await fetch(url);
+
+    // Cloudinary returns 404 when zero assets of that type carry the tag
+    if (response.status === 404) {
+      return [];
+    }
+
+    if (response.status === 401 || response.status === 403) {
+      throw new Error(
+        "Cloudinary resource list access is restricted. Check Settings -> Security -> Resource list."
+      );
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to load Cloudinary ${resourceType}s (${response.status}).`
+      );
+    }
+
+    const data = (await response.json()) as CloudinaryListResponse;
+    return Array.isArray(data.resources) ? data.resources : [];
+  })();
+
+  rawResourceListCache.set(cacheKey, request);
+
+  try {
+    return await request;
+  } catch (err) {
+    rawResourceListCache.delete(cacheKey);
+    throw err;
+  }
+}
+
 async function fetchResourceListByType(
   resourceType: "image" | "video",
   cloudName: string,
@@ -194,30 +247,11 @@ async function fetchResourceListByType(
   signal?: AbortSignal,
   imageWidth = 1600
 ): Promise<ArchiveMediaEntry[]> {
-  const url = `https://res.cloudinary.com/${encodeURIComponent(cloudName)}/${resourceType}/list/${encodeURIComponent(tag)}.json`;
-  const response = await fetch(url, { signal });
-
-  // Cloudinary returns 404 when zero assets of that type carry the tag
-  if (response.status === 404) {
+  const resources = await fetchRawResourceList(resourceType, cloudName, tag);
+  if (signal?.aborted) {
     return [];
   }
-
-  if (response.status === 401 || response.status === 403) {
-    throw new Error(
-      "Cloudinary resource list access is restricted. Check Settings -> Security -> Resource list."
-    );
-  }
-
-  if (!response.ok) {
-    throw new Error(
-      `Failed to load Cloudinary ${resourceType}s (${response.status}).`
-    );
-  }
-
-  const data = (await response.json()) as CloudinaryListResponse;
-  const resources = Array.isArray(data.resources) ? data.resources : [];
   const kind: MediaKind = resourceType === "video" ? "video" : "photo";
-
   return resources.map((item) =>
     mapCloudinaryResource(item, kind, cloudName, imageWidth)
   );
@@ -247,7 +281,7 @@ export async function fetchCloudinaryTaggedPhotos(
   signal?: AbortSignal,
   imageWidth = 640
 ): Promise<ArchiveMediaEntry[]> {
-  const imageTags = tag ? [tag] : [...CLOUDINARY_TAGS];
+  const imageTags = tag ? [tag] : [...CLOUDINARY_IMAGE_TAGS];
 
   const photoBatches = await Promise.all(
     imageTags.map((t) =>
@@ -263,8 +297,8 @@ export async function fetchCloudinaryTaggedMedia(
   tag?: string,
   signal?: AbortSignal
 ): Promise<ArchiveMediaEntry[]> {
-  const imageTags = tag ? [tag] : [...CLOUDINARY_TAGS];
-  const videoTags = tag ? [tag] : [...CLOUDINARY_TAGS];
+  const imageTags = tag ? [tag] : [...CLOUDINARY_IMAGE_TAGS];
+  const videoTags = tag ? [tag] : [...CLOUDINARY_VIDEO_TAGS];
 
   const [photoBatches, videoBatches] = await Promise.all([
     Promise.all(

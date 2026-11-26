@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useSkyTheme } from "../components/pixel/SceneTransitionManager";
 import {
   CLOUDINARY_TAG,
+  clearCloudinaryMediaCache,
   fetchCloudinaryTaggedMedia,
   groupMediaIntoRows,
   type ArchiveMediaEntry,
@@ -78,6 +79,7 @@ export default function MediaPage() {
   }, [reloadNonce]);
 
   const handleRetry = () => {
+    clearCloudinaryMediaCache();
     setIsLoading(true);
     setErrorMessage(null);
     setReloadNonce((n) => n + 1);
@@ -265,7 +267,7 @@ export default function MediaPage() {
                               ariaLabel={item.title}
                               muted
                               loop
-                              preload="metadata"
+                              preload="none"
                               style={{ borderRadius: "16px" }}
                               className="h-full w-full bg-black/40 object-cover shadow-[0_14px_34px_-12px_rgba(12,8,20,0.55)] ring-1 ring-white/15 transition-[box-shadow,filter] duration-300 group-hover:brightness-[1.04] group-hover:shadow-[0_20px_42px_-12px_rgba(12,8,20,0.72)] group-hover:ring-white/35"
                             />
