@@ -220,7 +220,7 @@ export async function fetchCloudinaryTaggedMedia(
   tag?: string,
   signal?: AbortSignal
 ): Promise<ArchiveMediaEntry[]> {
-  const imageTags = tag ? [tag] : [CLOUDINARY_TAG];
+  const imageTags = tag ? [tag] : [...CLOUDINARY_VIDEO_TAGS];
   const videoTags = tag ? [tag] : [...CLOUDINARY_VIDEO_TAGS];
 
   const [photoBatches, videoBatches] = await Promise.all([
