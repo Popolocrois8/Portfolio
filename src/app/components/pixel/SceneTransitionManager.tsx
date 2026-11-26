@@ -164,6 +164,24 @@ function clamp01(v: number): number {
   return Math.max(0, Math.min(1, v));
 }
 
+function normalizePathname(path: string): string {
+  const withoutHash = path.split("#")[0] ?? "/";
+  const withoutQuery = withoutHash.split("?")[0] || "/";
+  return withoutQuery.length > 1 && withoutQuery.endsWith("/")
+    ? withoutQuery.slice(0, -1)
+    : withoutQuery;
+}
+
+interface ActiveTransitionState {
+  targetPathname: string;
+  holdDurationMs: number;
+  revealDurationMs: number;
+  coverDone: boolean;
+  holdElapsed: boolean;
+  routeCommitted: boolean;
+  openingStarted: boolean;
+}
+
 // Codrops-style directional wave pixel matrix (bottom->top or top->bottom with soft wave edge)
 function generatePixelGrid(
   width: number,
@@ -238,9 +256,11 @@ export default function SceneTransitionManager({
   const nextPixelDirRef = useRef<PixelDirection>("up");
   const [reducedMotionFade, setReducedMotionFade] = useState<boolean>(false);
   const [instantSkySwitch, setInstantSkySwitch] = useState<boolean>(false);
-  const [revealKey, setRevealKey] = useState<number>(0);
 
   const curtainTimersRef = useRef<NodeJS.Timeout[]>([]);
+  const curtainRafsRef = useRef<number[]>([]);
+  const activeTransitionRef = useRef<ActiveTransitionState | null>(null);
+  const pathnameRef = useRef(pathname);
 
   const palette = useMemo(() => getBentoPalette(activeTheme), [activeTheme]);
 
@@ -341,7 +361,53 @@ export default function SceneTransitionManager({
       clearTimeout(t);
     }
     curtainTimersRef.current = [];
+    for (const id of curtainRafsRef.current) {
+      window.cancelAnimationFrame(id);
+    }
+    curtainRafsRef.current = [];
+    activeTransitionRef.current = null;
   }, []);
+
+  // Reveal only after the new route has committed and painted behind the black overlay
+  const beginOpeningPhase = useCallback((state: ActiveTransitionState) => {
+    if (activeTransitionRef.current !== state || state.openingStarted) return;
+    state.openingStarted = true;
+
+    const raf1 = window.requestAnimationFrame(() => {
+      const raf2 = window.requestAnimationFrame(() => {
+        if (activeTransitionRef.current !== state) return;
+        setCurtainPhase("opening");
+
+        const doneTimer = setTimeout(() => {
+          if (activeTransitionRef.current !== state) return;
+          activeTransitionRef.current = null;
+          setCurtainPhase("idle");
+          setActiveTransitionKind("none");
+          setReducedMotionFade(false);
+          setInstantSkySwitch(false);
+          curtainTimersRef.current = [];
+          curtainRafsRef.current = [];
+        }, state.revealDurationMs + 24);
+
+        curtainTimersRef.current.push(doneTimer);
+      });
+      curtainRafsRef.current.push(raf2);
+    });
+    curtainRafsRef.current.push(raf1);
+  }, []);
+
+  useEffect(() => {
+    pathnameRef.current = pathname;
+    const state = activeTransitionRef.current;
+    if (!state || state.routeCommitted) return;
+
+    if (normalizePathname(pathname) === state.targetPathname) {
+      state.routeCommitted = true;
+      if (state.coverDone && state.holdElapsed) {
+        beginOpeningPhase(state);
+      }
+    }
+  }, [pathname, beginOpeningPhase]);
 
   // Shared lifecycle coordinator for both page transition styles
   const runTransitionLifecycle = useCallback(
@@ -358,73 +424,72 @@ export default function SceneTransitionManager({
         typeof window !== "undefined" &&
         window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      const nextTheme = currentThemeRef.current;
+      const effectiveCoverMs = prefersReducedMotion ? 190 : coverDurationMs + 16;
+      const effectiveHoldMs = prefersReducedMotion ? 100 : holdDurationMs;
+      const effectiveRevealMs = prefersReducedMotion ? 190 : revealDurationMs;
 
-      const swapScene = () => {
+      const targetPathname = normalizePathname(targetPath);
+      const currentPathname = normalizePathname(pathnameRef.current);
+      const needsNavigation = targetPathname !== currentPathname;
+
+      // Prefetch during the cover animation so the route payload is ready at swap time
+      if (needsNavigation) {
+        router.prefetch(targetPath);
+      }
+
+      const transitionState: ActiveTransitionState = {
+        targetPathname,
+        holdDurationMs: effectiveHoldMs,
+        revealDurationMs: effectiveRevealMs,
+        coverDone: false,
+        holdElapsed: false,
+        routeCommitted: !needsNavigation,
+        openingStarted: false,
+      };
+      activeTransitionRef.current = transitionState;
+
+      setActiveTransitionKind(kind);
+      setReducedMotionFade(prefersReducedMotion);
+      setCurtainPhase("covering");
+
+      const coverTimer = setTimeout(() => {
+        if (activeTransitionRef.current !== transitionState) return;
+        transitionState.coverDone = true;
+        setCurtainPhase("holding");
+
         setInstantSkySwitch(true);
         if (timerRef.current) {
           clearTimeout(timerRef.current);
           timerRef.current = null;
         }
-        currentThemeRef.current = nextTheme;
-        setActiveTheme(nextTheme);
         setIsTransitioning(false);
 
-        router.push(targetPath);
-        setRevealKey((k) => k + 1);
-      };
-
-      setActiveTransitionKind(kind);
-
-      if (prefersReducedMotion) {
-        setReducedMotionFade(true);
-        setCurtainPhase("covering");
+        if (needsNavigation) {
+          router.push(targetPath);
+        }
 
         const holdTimer = setTimeout(() => {
-          setCurtainPhase("holding");
-          swapScene();
-        }, 190);
+          if (activeTransitionRef.current !== transitionState) return;
+          transitionState.holdElapsed = true;
+          if (transitionState.routeCommitted) {
+            beginOpeningPhase(transitionState);
+          }
+        }, effectiveHoldMs);
 
-        const openTimer = setTimeout(() => {
-          setCurtainPhase("opening");
-        }, 290);
+        // Safety fallback so a slow/redirected navigation never leaves the curtain stuck
+        const fallbackTimer = setTimeout(() => {
+          if (activeTransitionRef.current !== transitionState) return;
+          transitionState.holdElapsed = true;
+          transitionState.routeCommitted = true;
+          beginOpeningPhase(transitionState);
+        }, Math.max(effectiveHoldMs, 4000));
 
-        const doneTimer = setTimeout(() => {
-          setCurtainPhase("idle");
-          setActiveTransitionKind("none");
-          setReducedMotionFade(false);
-          setInstantSkySwitch(false);
-          curtainTimersRef.current = [];
-        }, 480);
+        curtainTimersRef.current.push(holdTimer, fallbackTimer);
+      }, effectiveCoverMs);
 
-        curtainTimersRef.current = [holdTimer, openTimer, doneTimer];
-        return;
-      }
-
-      setReducedMotionFade(false);
-      setCurtainPhase("covering");
-
-      const coverEnd = coverDurationMs + 16;
-      const holdTimer = setTimeout(() => {
-        setCurtainPhase("holding");
-        swapScene();
-      }, coverEnd);
-
-      const openStart = coverEnd + holdDurationMs;
-      const openTimer = setTimeout(() => {
-        setCurtainPhase("opening");
-      }, openStart);
-
-      const doneTimer = setTimeout(() => {
-        setCurtainPhase("idle");
-        setActiveTransitionKind("none");
-        setInstantSkySwitch(false);
-        curtainTimersRef.current = [];
-      }, openStart + revealDurationMs + 24);
-
-      curtainTimersRef.current = [holdTimer, openTimer, doneTimer];
+      curtainTimersRef.current = [coverTimer];
     },
-    [clearCurtainTimers, router]
+    [beginOpeningPhase, clearCurtainTimers, router]
   );
 
   // Transition A: 10-column opposing-bars Curtain (Top & Bottom per column close -> Hold -> Part Up & Down)
@@ -539,7 +604,6 @@ export default function SceneTransitionManager({
           }`}
       >
         <div
-          key={revealKey}
           data-border-mode={borderMode}
           style={{
             ...(themeCssVars as CSSProperties),
