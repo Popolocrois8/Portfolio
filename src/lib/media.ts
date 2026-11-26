@@ -16,12 +16,13 @@ export interface ArchiveMediaEntry {
 
 export const CLOUDINARY_CLOUD_NAME = "sv4v6yug";
 export const CLOUDINARY_TAG = "portfolio";
-export const CLOUDINARY_VIDEO_TAGS = [
+export const CLOUDINARY_TAGS = [
   "portfolio",
   "edit",
   "talking",
   "meme",
 ] as const;
+export const CLOUDINARY_VIDEO_TAGS = CLOUDINARY_TAGS;
 
 interface CloudinaryListResource {
   public_id: string;
@@ -63,10 +64,12 @@ export function buildCloudinaryMediaUrl(
   publicId: string,
   kind: MediaKind,
   version?: number,
-  cloudName = CLOUDINARY_CLOUD_NAME
+  cloudName = CLOUDINARY_CLOUD_NAME,
+  imageWidth = 1600
 ): string {
   const resourceType = kind === "video" ? "video" : "image";
-  const transforms = kind === "video" ? "f_auto,q_auto" : "f_auto,q_auto,w_1600";
+  const transforms =
+    kind === "video" ? "f_auto,q_auto" : `f_auto,q_auto,w_${imageWidth}`;
   const versionSegment = version ? `v${version}/` : "";
   return `https://res.cloudinary.com/${cloudName}/${resourceType}/upload/${transforms}/${versionSegment}${encodePublicId(publicId)}`;
 }
@@ -127,7 +130,8 @@ function resolveVideoPoster(
 function mapCloudinaryResource(
   resource: CloudinaryListResource,
   kind: MediaKind,
-  cloudName: string
+  cloudName: string,
+  imageWidth = 1600
 ): ArchiveMediaEntry {
   const custom = resource.context?.custom;
   const rawTitle = custom?.title?.trim() || custom?.caption?.trim();
@@ -170,7 +174,8 @@ function mapCloudinaryResource(
       resource.public_id,
       kind,
       resource.version,
-      cloudName
+      cloudName,
+      imageWidth
     ),
     poster:
       kind === "video" ? resolveVideoPoster(resource, cloudName) : undefined,
@@ -186,7 +191,8 @@ async function fetchResourceListByType(
   resourceType: "image" | "video",
   cloudName: string,
   tag: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  imageWidth = 1600
 ): Promise<ArchiveMediaEntry[]> {
   const url = `https://res.cloudinary.com/${encodeURIComponent(cloudName)}/${resourceType}/list/${encodeURIComponent(tag)}.json`;
   const response = await fetch(url, { signal });
@@ -212,7 +218,44 @@ async function fetchResourceListByType(
   const resources = Array.isArray(data.resources) ? data.resources : [];
   const kind: MediaKind = resourceType === "video" ? "video" : "photo";
 
-  return resources.map((item) => mapCloudinaryResource(item, kind, cloudName));
+  return resources.map((item) =>
+    mapCloudinaryResource(item, kind, cloudName, imageWidth)
+  );
+}
+
+function dedupeAndSortEntries(items: ArchiveMediaEntry[]): ArchiveMediaEntry[] {
+  const deduped = new Map<string, ArchiveMediaEntry>();
+  for (const item of items) {
+    if (!deduped.has(item.id)) {
+      deduped.set(item.id, item);
+    }
+  }
+
+  return Array.from(deduped.values()).sort((a, b) => {
+    if (a.order !== undefined && b.order !== undefined) {
+      return a.order - b.order;
+    }
+    if (a.order !== undefined) return -1;
+    if (b.order !== undefined) return 1;
+    return b.createdAt.localeCompare(a.createdAt);
+  });
+}
+
+export async function fetchCloudinaryTaggedPhotos(
+  cloudName = CLOUDINARY_CLOUD_NAME,
+  tag?: string,
+  signal?: AbortSignal,
+  imageWidth = 640
+): Promise<ArchiveMediaEntry[]> {
+  const imageTags = tag ? [tag] : [...CLOUDINARY_TAGS];
+
+  const photoBatches = await Promise.all(
+    imageTags.map((t) =>
+      fetchResourceListByType("image", cloudName, t, signal, imageWidth)
+    )
+  );
+
+  return dedupeAndSortEntries(photoBatches.flat());
 }
 
 export async function fetchCloudinaryTaggedMedia(
@@ -220,8 +263,8 @@ export async function fetchCloudinaryTaggedMedia(
   tag?: string,
   signal?: AbortSignal
 ): Promise<ArchiveMediaEntry[]> {
-  const imageTags = tag ? [tag] : [...CLOUDINARY_VIDEO_TAGS];
-  const videoTags = tag ? [tag] : [...CLOUDINARY_VIDEO_TAGS];
+  const imageTags = tag ? [tag] : [...CLOUDINARY_TAGS];
+  const videoTags = tag ? [tag] : [...CLOUDINARY_TAGS];
 
   const [photoBatches, videoBatches] = await Promise.all([
     Promise.all(
@@ -236,21 +279,7 @@ export async function fetchCloudinaryTaggedMedia(
     ),
   ]);
 
-  const deduped = new Map<string, ArchiveMediaEntry>();
-  for (const item of [...photoBatches.flat(), ...videoBatches.flat()]) {
-    if (!deduped.has(item.id)) {
-      deduped.set(item.id, item);
-    }
-  }
-
-  return Array.from(deduped.values()).sort((a, b) => {
-    if (a.order !== undefined && b.order !== undefined) {
-      return a.order - b.order;
-    }
-    if (a.order !== undefined) return -1;
-    if (b.order !== undefined) return 1;
-    return b.createdAt.localeCompare(a.createdAt);
-  });
+  return dedupeAndSortEntries([...photoBatches.flat(), ...videoBatches.flat()]);
 }
 
 /**

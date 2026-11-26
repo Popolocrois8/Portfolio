@@ -1,175 +1,114 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { useReducedMotion } from "motion/react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useSkyTheme } from "../pixel/SceneTransitionManager";
 import { Marquee } from "../ui/marquee";
+import {
+  CLOUDINARY_TAG,
+  fetchCloudinaryTaggedPhotos,
+  type ArchiveMediaEntry,
+} from "@/lib/media";
 
-interface ShowcaseMediaItem {
-  id: string;
-  src: string;
-  type: "image" | "video";
-  alt: string;
-  poster?: string;
-}
+const MAX_MARQUEE_PHOTOS = 16;
+const SKELETON_TILES = [0, 1, 2, 3];
 
-/**
- * 8 showcase media items split across two opposing marquee rows.
- * Swap `src` (and optional `poster`) with Cloudflare R2 asset URLs when ready
- * (e.g., `https://<bucket>.r2.dev/...`).
- */
-const SHOWCASE_MEDIA: ShowcaseMediaItem[] = [
-  {
-    id: "golden-horizon",
-    src: "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?auto=format&fit=crop&w=900&q=80",
-    type: "image",
-    alt: "Golden hour horizon across misty mountain peaks",
-  },
-  {
-    id: "sintel-reel",
-    src: "https://mdn.github.io/shared-assets/videos/sintel-short.mp4",
-    type: "video",
-    alt: "Sintel cinematic motion reel clip",
-  },
-  {
-    id: "dusk-surf",
-    src: "https://images.unsplash.com/photo-1505144808419-1957a94ca61e?auto=format&fit=crop&w=900&q=80",
-    type: "image",
-    alt: "Ocean surf breaking beneath dusk clouds",
-  },
-  {
-    id: "camera-study",
-    src: "https://images.unsplash.com/photo-1554080353-a576cf803bda?auto=format&fit=crop&w=900&q=80",
-    type: "image",
-    alt: "Camera lens capturing moody studio light",
-  },
-  {
-    id: "flower-timelapse",
-    src: "https://mdn.github.io/shared-assets/videos/flower.mp4",
-    type: "video",
-    alt: "Blooming flower time-lapse motion study",
-  },
-  {
-    id: "alpine-night",
-    src: "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=900&q=80",
-    type: "image",
-    alt: "Starry alpine night ridge",
-  },
-  {
-    id: "tears-of-steel-reel",
-    src: "https://mdn.github.io/shared-assets/videos/tears-of-steel-battle-clip-medium.mp4",
-    type: "video",
-    poster:
-      "https://mdn.github.io/shared-assets/images/examples/tears-of-steel-battle-clip-medium-poster.jpg",
-    alt: "Tears of Steel cinematic motion reel",
-  },
-  {
-    id: "coastal-valley",
-    src: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=900&q=80",
-    type: "image",
-    alt: "Sunlit valley opening toward coastal cliffs",
-  },
-];
-
-const FIRST_ROW = SHOWCASE_MEDIA.slice(0, 4);
-const SECOND_ROW = SHOWCASE_MEDIA.slice(4);
-
-function MarqueeMediaTile({
-  item,
-  shouldReduceMotion,
-}: {
-  item: ShowcaseMediaItem;
-  shouldReduceMotion: boolean;
-}) {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-
-  useEffect(() => {
-    const videoEl = videoRef.current;
-    if (!videoEl || item.type !== "video") {
-      return;
-    }
-
-    videoEl.defaultMuted = true;
-    videoEl.muted = true;
-
-    let isInView = true;
-    const reducedMotionQuery =
-      typeof window !== "undefined" && typeof window.matchMedia === "function"
-        ? window.matchMedia("(prefers-reduced-motion: reduce)")
-        : null;
-
-    const syncPlayback = () => {
-      const prefersReduced =
-        shouldReduceMotion || Boolean(reducedMotionQuery?.matches);
-      if (prefersReduced || document.hidden || !isInView) {
-        videoEl.pause();
-      } else {
-        void videoEl.play().catch(() => {});
-      }
-    };
-
-    const observer =
-      typeof IntersectionObserver !== "undefined"
-        ? new IntersectionObserver(
-            (entries) => {
-              const entry = entries[0];
-              if (entry) {
-                isInView = entry.isIntersecting;
-                syncPlayback();
-              }
-            },
-            { threshold: 0.05 },
-          )
-        : null;
-
-    if (observer) {
-      observer.observe(videoEl);
-    }
-
-    reducedMotionQuery?.addEventListener("change", syncPlayback);
-    document.addEventListener("visibilitychange", syncPlayback);
-    syncPlayback();
-
-    return () => {
-      observer?.disconnect();
-      reducedMotionQuery?.removeEventListener("change", syncPlayback);
-      document.removeEventListener("visibilitychange", syncPlayback);
-    };
-  }, [item.type, item.src, shouldReduceMotion]);
-
+function MarqueePhotoTile({ item }: { item: ArchiveMediaEntry }) {
   return (
     <div className="relative h-24 w-40 shrink-0 overflow-hidden rounded-xl border border-[var(--bento-border-soft)] bg-[var(--bento-surface)] shadow-[0_6px_14px_-6px_var(--bento-shadow-color)] transition-colors duration-700 sm:h-28 sm:w-48">
-      {item.type === "video" ? (
-        <video
-          ref={videoRef}
-          src={item.src}
-          poster={item.poster}
-          autoPlay={!shouldReduceMotion}
-          loop
-          muted
-          playsInline
-          preload="metadata"
-          aria-hidden="true"
-          className="pointer-events-none h-full w-full select-none object-cover object-center"
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={item.src}
+        alt={item.caption || item.title}
+        loading="eager"
+        decoding="async"
+        draggable={false}
+        className="pointer-events-none h-full w-full select-none object-cover object-center"
+      />
+    </div>
+  );
+}
+
+function MarqueeSkeletonRow() {
+  return (
+    <div className="flex shrink-0 gap-3 overflow-hidden">
+      {SKELETON_TILES.map((idx) => (
+        <div
+          key={idx}
+          className="h-24 w-40 shrink-0 animate-pulse rounded-xl border border-[var(--bento-border-soft)] bg-[var(--bento-surface)] opacity-70 sm:h-28 sm:w-48"
         />
-      ) : (
-        /* eslint-disable-next-line @next/next/no-img-element */
-        <img
-          src={item.src}
-          alt={item.alt}
-          loading="eager"
-          decoding="async"
-          draggable={false}
-          className="pointer-events-none h-full w-full select-none object-cover object-center"
-        />
-      )}
+      ))}
     </div>
   );
 }
 
 export default function MediaShowcaseCard() {
   const { triggerPixelTransition } = useSkyTheme();
-  const shouldReduceMotion = Boolean(useReducedMotion());
+  const [photos, setPhotos] = useState<ArchiveMediaEntry[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [hasError, setHasError] = useState<boolean>(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetchCloudinaryTaggedPhotos(undefined, undefined, controller.signal, 640)
+      .then((fetched) => {
+        if (controller.signal.aborted) return;
+        setPhotos(fetched.slice(0, MAX_MARQUEE_PHOTOS));
+        setHasError(false);
+      })
+      .catch(() => {
+        if (controller.signal.aborted) return;
+        setHasError(true);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, []);
+
+  const { firstRow, secondRow, rowRepeat, firstDuration, secondDuration } =
+    useMemo(() => {
+      if (photos.length === 0) {
+        return {
+          firstRow: [] as ArchiveMediaEntry[],
+          secondRow: [] as ArchiveMediaEntry[],
+          rowRepeat: 3,
+          firstDuration: "26s",
+          secondDuration: "26s",
+        };
+      }
+
+      if (photos.length === 1) {
+        return {
+          firstRow: photos,
+          secondRow: photos,
+          rowRepeat: 6,
+          firstDuration: "22s",
+          secondDuration: "22s",
+        };
+      }
+
+      const rowA: ArchiveMediaEntry[] = [];
+      const rowB: ArchiveMediaEntry[] = [];
+      photos.forEach((photo, index) => {
+        if (index % 2 === 0) rowA.push(photo);
+        else rowB.push(photo);
+      });
+
+      const shortestRow = Math.min(rowA.length, rowB.length);
+      const repeat = Math.max(3, Math.ceil(6 / Math.max(1, shortestRow)));
+
+      return {
+        firstRow: rowA,
+        secondRow: rowB,
+        rowRepeat: repeat,
+        firstDuration: `${Math.max(20, Math.round(rowA.length * 6.5))}s`,
+        secondDuration: `${Math.max(20, Math.round(rowB.length * 6.5))}s`,
+      };
+    }, [photos]);
 
   return (
     <button
@@ -237,39 +176,58 @@ export default function MediaShowcaseCard() {
         </span>
       </div>
 
-      {/* Dual-direction contained media marquee */}
+      {/* Dual-direction contained photo marquee */}
       <div
         aria-hidden="true"
         className="relative mt-5 flex w-full flex-1 flex-col justify-center gap-3 overflow-hidden"
       >
-        <Marquee pauseOnHover repeat={3} className="p-0 [--duration:26s] [--gap:0.75rem]">
-          {FIRST_ROW.map((item) => (
-            <MarqueeMediaTile
-              key={item.id}
-              item={item}
-              shouldReduceMotion={shouldReduceMotion}
-            />
-          ))}
-        </Marquee>
+        {isLoading ? (
+          <>
+            <MarqueeSkeletonRow />
+            <MarqueeSkeletonRow />
+          </>
+        ) : photos.length > 0 ? (
+          <>
+            <Marquee
+              pauseOnHover
+              repeat={rowRepeat}
+              style={{ "--duration": firstDuration } as CSSProperties}
+              className="p-0 [--gap:0.75rem]"
+            >
+              {firstRow.map((item) => (
+                <MarqueePhotoTile key={item.id} item={item} />
+              ))}
+            </Marquee>
 
-        <Marquee
-          reverse
-          pauseOnHover
-          repeat={3}
-          className="p-0 [--duration:26s] [--gap:0.75rem]"
-        >
-          {SECOND_ROW.map((item) => (
-            <MarqueeMediaTile
-              key={item.id}
-              item={item}
-              shouldReduceMotion={shouldReduceMotion}
-            />
-          ))}
-        </Marquee>
+            <Marquee
+              reverse
+              pauseOnHover
+              repeat={rowRepeat}
+              style={{ "--duration": secondDuration } as CSSProperties}
+              className="p-0 [--gap:0.75rem]"
+            >
+              {secondRow.map((item) => (
+                <MarqueePhotoTile key={item.id} item={item} />
+              ))}
+            </Marquee>
+          </>
+        ) : (
+          <div className="flex min-h-[12.75rem] flex-col items-center justify-center rounded-xl border border-dashed border-[var(--bento-border-soft)] bg-[var(--bento-surface)]/60 px-6 py-8 text-center sm:min-h-[14.75rem]">
+            <p className="text-xs font-medium text-[var(--bento-text-muted)]">
+              {hasError
+                ? "Could not load photo previews from Cloudinary."
+                : `Tag photos with "${CLOUDINARY_TAG}" in Cloudinary to preview them here.`}
+            </p>
+          </div>
+        )}
 
         {/* Soft horizontal edge fades blended into the card surface */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-[var(--bento-card-bg,var(--bento-bg-primary))] to-transparent transition-colors duration-700 sm:w-16" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-[var(--bento-card-bg,var(--bento-bg-primary))] to-transparent transition-colors duration-700 sm:w-16" />
+        {photos.length > 0 && (
+          <>
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-[var(--bento-card-bg,var(--bento-bg-primary))] to-transparent transition-colors duration-700 sm:w-16" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-[var(--bento-card-bg,var(--bento-bg-primary))] to-transparent transition-colors duration-700 sm:w-16" />
+          </>
+        )}
       </div>
     </button>
   );
